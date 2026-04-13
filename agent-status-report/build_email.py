@@ -2,23 +2,39 @@
 """
 build_email.py — Generate a fully static, email-safe HTML report with embedded chart images.
 
+Follows the Claude-orchestrates, Python-renders pattern.
+Claude writes a data contract JSON file; this script reads it and produces output.
+See: https://github.com/MattAtAloware/cowork-skill-template/blob/main/data_contract.schema.json
+
 Email clients strip <script> tags, so this script pre-renders charts server-side
 using matplotlib and embeds them as base64 JPEGs. The result is a single HTML string
 safe to paste directly into gmail_create_draft as the body.
 
-Optimized for small output size (~25-30 KB) so the full HTML reliably passes through
+Optimized for small output size (~25-40 KB) so the full HTML reliably passes through
 LLM context windows and MCP tool calls without truncation.
 
 Usage:
-  python build_email.py \
-    --rows    '[{"agent_name":"Ana Cruz","status_code":"1","total_seconds":8435}, ...]' \
-    --company "Debt Freedom USA" \
-    --start-date 2026-04-06 \
-    --end-date   2026-04-06 \
-    --company-id 6364 \
-    --out /tmp/agent-status-email.html
+  python build_email.py \\
+    --input /tmp/agent-status/report_data.json \\
+    --out   /tmp/agent-status/output.html
 
-Output: A standalone HTML file. Paste its entire contents as the email body.
+Data contract (report_data.json) shape:
+  {
+    "meta": {
+      "skill_name": "agent-status-time-report",
+      "company_name": "Debt Freedom USA",
+      "company_id": 6364,
+      "date_range": {"start": "2026-04-12", "end": "2026-04-12"},
+      "output_format": "email",
+      "test_mode": true          // when true, banner is shown; recipient override is Claude's job
+    },
+    "rows": [
+      {"agent_name": "Ana Cruz", "status_code": "1", "total_seconds": 8435},
+      ...
+    ]
+  }
+
+Output: A standalone HTML file. Read its entire contents and pass as gmail_create_draft body.
 """
 
 import argparse
@@ -28,6 +44,7 @@ import json
 import sys
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
 
 
 # ── Status metadata ────────────────────────────────────────────────────────────
@@ -206,7 +223,7 @@ def compute_kpis(agents: dict) -> dict:
 
 
 # ── Email HTML builder ─────────────────────────────────────────────────────────
-def build_email_html(agents, company, date_label, company_id, bar_b64, donut_b64):
+def build_email_html(agents, company, date_label, company_id, bar_b64, donut_b64, test_mode=False):
     kpis = compute_kpis(agents)
 
     sorted_agents = sorted(
@@ -214,6 +231,17 @@ def build_email_html(agents, company, date_label, company_id, bar_b64, donut_b64
         key=lambda kv: kv[1].get("4", 0) + kv[1].get("1", 0),
         reverse=True,
     )
+
+    # TEST_MODE banner — visible in the email so recipients know it's a test
+    test_banner = ""
+    if test_mode:
+        test_banner = (
+            '<tr><td colspan="2" style="padding:0 0 12px 0">'
+            '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;'
+            'padding:10px 16px;font-size:12px;color:#856404;font-weight:600;text-align:center">'
+            '⚠️ TEST MODE — This report was sent to matthew@aloware.com, not the client'
+            '</div></td></tr>'
+        )
 
     kpi_configs = [
         ("1", "Available",  "#22c55e"),
@@ -273,6 +301,8 @@ def build_email_html(agents, company, date_label, company_id, bar_b64, donut_b64
 <body style="margin:0;padding:0;background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1e2433">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f2f5;padding:16px"><tr><td>
 
+  {f'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px"><tr><td><div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px 16px;font-size:12px;color:#856404;font-weight:600;text-align:center">⚠️ TEST MODE — This report was sent to matthew@aloware.com, not the client</div></td></tr></table>' if test_mode else ''}
+
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#1a2744;border-radius:10px;margin-bottom:16px">
   <tr><td style="padding:20px 28px">
     <div style="font-size:20px;font-weight:700;color:#ffffff">Agent Status Time Report</div>
@@ -325,34 +355,55 @@ def build_email_html(agents, company, date_label, company_id, bar_b64, donut_b64
 # ── Main ───────────────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser(description="Build email-safe Agent Status Report HTML")
-    parser.add_argument("--rows",       required=True)
-    parser.add_argument("--company",    required=True)
-    parser.add_argument("--start-date", required=True)
-    parser.add_argument("--end-date",   default=None)
-    parser.add_argument("--company-id", type=int, default=0)
-    parser.add_argument("--out",        required=True)
+    parser.add_argument("--input", required=True, help="Path to report_data.json (data contract)")
+    parser.add_argument("--out",   required=True, help="Path to write output HTML")
     args = parser.parse_args()
 
-    rows = json.loads(args.rows)
-    end  = args.end_date or args.start_date
-    date_label = format_date_label(args.start_date, end)
-    agents = aggregate_rows(rows)
-
-    if not agents:
-        print("No agent data found \u2014 aborting.", file=sys.stderr)
+    # Load data contract
+    contract_path = Path(args.input)
+    if not contract_path.exists():
+        print(f"[ERROR] Data contract not found: {contract_path}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Rendering charts for {len(agents)} agents\u2026")
+    try:
+        contract = json.loads(contract_path.read_text())
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] Invalid JSON in data contract: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    meta = contract.get("meta", {})
+    rows = contract.get("rows", [])
+
+    company    = meta.get("company_name", "Unknown Company")
+    company_id = meta.get("company_id", 0)
+    test_mode  = meta.get("test_mode", True)   # safe default: always test unless explicitly False
+
+    dr = meta.get("date_range", {})
+    start_date = dr.get("start", "")
+    end_date   = dr.get("end", start_date)
+    date_label = format_date_label(start_date, end_date)
+
+    if not rows:
+        print("[ERROR] No rows in data contract — nothing to render.", file=sys.stderr)
+        sys.exit(1)
+
+    agents = aggregate_rows(rows)
+    if not agents:
+        print("[ERROR] No agent data after aggregation — aborting.", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Rendering charts for {len(agents)} agents (test_mode={test_mode})…")
     bar_b64   = make_stacked_bar(agents)
     donut_b64 = make_donut(agents)
 
-    html = build_email_html(agents, args.company, date_label, args.company_id, bar_b64, donut_b64)
+    html = build_email_html(agents, company, date_label, company_id, bar_b64, donut_b64, test_mode=test_mode)
 
-    with open(args.out, "w") as f:
-        f.write(html)
+    out_path = Path(args.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(html, encoding="utf-8")
 
     size_kb = len(html) / 1024
-    print(f"Email HTML written to: {args.out} ({size_kb:.1f} KB)")
+    print(f"[OK] Email HTML written to: {args.out} ({size_kb:.1f} KB)")
 
 
 if __name__ == "__main__":
