@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dev dependencies
+        run: pip install ruff
+
+      - name: Syntax check — all scripts
+        run: |
+          echo "Checking syntax on all Python scripts..."
+          find . -name '*.py' -not -path './.git/*' | while read f; do
+            python -m py_compile "$f" && echo "  ✓ $f" || { echo "  ✗ SYNTAX ERROR: $f"; exit 1; }
+          done
+
+      - name: Lint with ruff
+        run: ruff check .
