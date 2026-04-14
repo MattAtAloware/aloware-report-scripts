@@ -4,8 +4,10 @@
 build_email.py - Generate a fully static, email-safe HTML report.
 
 Pure Python — zero external dependencies (no matplotlib, no PIL, no pip installs).
-Produces self-contained inline-CSS HTML that renders identically in Gmail, Outlook,
-and Apple Mail. No images, no JavaScript, no <style> blocks.
+Produces self-contained HTML that renders identically in Gmail, Outlook,
+and Apple Mail. No images, no JavaScript. Uses <style> in <head> for
+agent table rows (Gmail supports this since 2016), inline CSS for
+one-off elements.
 
 Usage:
   python build_email.py --input report_data.json --out output.html
@@ -43,11 +45,6 @@ VALID_STATUS_CODES = set(STATUS_LABELS.keys())
 
 
 def aggregate_rows(rows: list) -> dict:
-    """Aggregate raw query rows into {agent_name: {status_code: total_seconds}}.
-
-    Filters out any non-numeric status codes (e.g. legacy "offline" string values)
-    to avoid inflating or misattributing time. Only codes 0-6 are valid.
-    """
     agents = defaultdict(lambda: {k: 0 for k in STATUS_LABELS})
     for row in rows:
         name = row.get("agent_name", "Unknown")
@@ -229,25 +226,23 @@ def build_email_html(agents, company, date_label, company_id):
 
         def cell(code, _s=s):
             val = _s.get(code, 0)
-            return fmt_hms(val) if val else '<span style="color:#d1d5db">&#8212;</span>'
+            return fmt_hms(val) if val else '<span class="nd">&#8212;</span>'
 
-        row_bg = "#fff" if i % 2 == 0 else "#fafafa"
+        row_cls = "ro" if i % 2 == 0 else "ra"
         table_rows += (
-            f'<tr style="background:{row_bg}">'
-            f'<td style="padding:9px 12px;font-weight:600;color:#1e2433;white-space:nowrap;border-bottom:1px solid #f3f4f6">{agent_name}</td>'
-            f'<td style="padding:9px 12px;border-bottom:1px solid #f3f4f6">'
-            f'<table cellpadding="0" cellspacing="0" border="0"><tr>'
-            f'<td style="width:60px;background:#f1f5f9;border-radius:4px;overflow:hidden;vertical-align:middle">'
-            f'<div style="background:#2c5dbd;height:8px;width:{pct_w};border-radius:4px"></div></td>'
-            f'<td style="padding-left:6px;font-size:12px;font-weight:600;color:#1e2433;white-space:nowrap">{pct_val}</td>'
+            f'<tr class="{row_cls}">'
+            f'<td class="an">{agent_name}</td>'
+            f'<td class="ac"><table cellpadding="0" cellspacing="0" border="0"><tr>'
+            f'<td class="pb"><div class="bar" style="width:{pct_w}"></div></td>'
+            f'<td class="pv">{pct_val}</td>'
             f'</tr></table></td>'
-            f'<td style="padding:9px 12px;color:#22c55e;font-weight:500;border-bottom:1px solid #f3f4f6">{cell("1")}</td>'
-            f'<td style="padding:9px 12px;color:#3b82f6;font-weight:500;border-bottom:1px solid #f3f4f6">{cell("4")}</td>'
-            f'<td style="padding:9px 12px;color:#a855f7;font-weight:500;border-bottom:1px solid #f3f4f6">{cell("5")}</td>'
-            f'<td style="padding:9px 12px;color:#f97316;font-weight:500;border-bottom:1px solid #f3f4f6">{cell("2")}</td>'
-            f'<td style="padding:9px 12px;color:#eab308;font-weight:500;border-bottom:1px solid #f3f4f6">{cell("3")}</td>'
-            f'<td style="padding:9px 12px;color:#06b6d4;font-weight:500;border-bottom:1px solid #f3f4f6">{cell("6")}</td>'
-            f'<td style="padding:9px 12px;color:#94a3b8;font-weight:500;border-bottom:1px solid #f3f4f6">{cell("0")}</td>'
+            f'<td class="s1">{cell("1")}</td>'
+            f'<td class="s4">{cell("4")}</td>'
+            f'<td class="s5">{cell("5")}</td>'
+            f'<td class="s2">{cell("2")}</td>'
+            f'<td class="s3">{cell("3")}</td>'
+            f'<td class="s6">{cell("6")}</td>'
+            f'<td class="s0">{cell("0")}</td>'
             f'</tr>'
         )
 
@@ -256,7 +251,24 @@ def build_email_html(agents, company, date_label, company_id):
 
     return f"""<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Agent Status Time Report - {company}</title></head>
+<head><meta charset="UTF-8"><title>Agent Status Time Report - {company}</title>
+<style>
+.ro{{background:#fff}}.ra{{background:#fafafa}}
+.an{{padding:9px 12px;font-weight:600;color:#1e2433;white-space:nowrap;border-bottom:1px solid #f3f4f6}}
+.ac{{padding:9px 12px;border-bottom:1px solid #f3f4f6}}
+.pb{{width:60px;background:#f1f5f9;border-radius:4px;overflow:hidden;vertical-align:middle}}
+.bar{{background:#2c5dbd;height:8px;border-radius:4px}}
+.pv{{padding-left:6px;font-size:12px;font-weight:600;color:#1e2433;white-space:nowrap}}
+.s1{{padding:9px 12px;color:#22c55e;font-weight:500;border-bottom:1px solid #f3f4f6}}
+.s4{{padding:9px 12px;color:#3b82f6;font-weight:500;border-bottom:1px solid #f3f4f6}}
+.s5{{padding:9px 12px;color:#a855f7;font-weight:500;border-bottom:1px solid #f3f4f6}}
+.s2{{padding:9px 12px;color:#f97316;font-weight:500;border-bottom:1px solid #f3f4f6}}
+.s3{{padding:9px 12px;color:#eab308;font-weight:500;border-bottom:1px solid #f3f4f6}}
+.s6{{padding:9px 12px;color:#06b6d4;font-weight:500;border-bottom:1px solid #f3f4f6}}
+.s0{{padding:9px 12px;color:#94a3b8;font-weight:500;border-bottom:1px solid #f3f4f6}}
+.nd{{color:#d1d5db}}
+</style>
+</head>
 <body style="margin:0;padding:0;background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1e2433">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f2f5;padding:16px"><tr><td>
 
