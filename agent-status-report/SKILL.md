@@ -16,24 +16,33 @@ description: >
 
 ## Architecture
 
-Follows the **Claude-orchestrates, Python-renders** pattern from `MattAtAloware/cowork-skill-template`.
+**Claude-orchestrates, Python-owns-SQL** pattern.
 
-1. Fetch renderer script from GitHub (Step 0 — before any data queries)
-2. Gather data via Metabase (Steps 1–2)
-3. Write data contract JSON (Step 3)
-4. Run renderer → output HTML (Step 4)
-5. Deliver via Gmail MCP (Step 5)
+The SQL, batching logic, and data contract format all live in `query_report.py` —
+not in this skill. Claude never writes or interprets SQL. It fetches the scripts,
+runs them with parameters, and delivers the output.
 
-**Claude never generates report HTML directly.** The renderer is the source of truth.
+**Pipeline:**
 
-**Scripts repo:** `MattAtAloware/aloware-report-scripts` → `agent-status-report/build_email.py`
+1. Fetch scripts from GitHub (Step 0)
+2. Run `query_report.py generate-sql --agent-list-only` → get agent-list SQL
+3. Execute agent-list SQL via Metabase MCP → get user_ids
+4. Run `query_report.py generate-sql --user-ids '[...]'` → get batch SQL queries
+5. Execute each batch SQL via Metabase MCP → accumulate rows
+6. Write rows to `/tmp/agent-status/rows.json`
+7. Run `query_report.py build-contract` → writes `report_data.json`
+8. Run `build_email.py` → renders `output.html`
+9. Deliver via Gmail MCP
 
-**Working dir:** `/tmp/agent-status/` — create at start:
+**Scripts repo:** `MattAtAloware/aloware-report-scripts` → `agent-status-report/`
+
+**Working dir:** `/tmp/agent-status/` — create fresh at start:
 ```bash
 rm -rf /tmp/agent-status 2>/dev/null; mkdir -p /tmp/agent-status
 ```
 
-**TEST_MODE:** ON by default — all emails draft to `matthew@aloware.com` with a `[TEST]` subject prefix and an in-email banner. User must say **"send live"** to disable.
+**TEST_MODE:** ON by default — all emails draft to `matthew@aloware.com` with a `[TEST]`
+subject prefix. User must say **"send live"** to disable.
 
 ---
 
@@ -48,172 +57,126 @@ rm -rf /tmp/agent-status 2>/dev/null; mkdir -p /tmp/agent-status
 | `end_date` | = start_date | `2026-04-10` |
 | `test_mode` | `true` | say "send live" to set false |
 
-**Date shortcuts** (resolve before querying):
-- nothing / "yesterday" → yesterday / yesterday
-- "last week" → last Mon / last Sun
-- "this week" → this Mon / today
-- "last 7 days" → 7 days ago / yesterday
-- "last month" → 1st of prior month / last day of prior month
+**Date shortcuts** (pass directly to `query_report.py --start-date`):
+`yesterday`, `last week`, `this week`, `last 7 days`, `last month`, or `YYYY-MM-DD`
 
 ---
 
-## Step 0 — Fetch renderer from GitHub
+## Step 0 — Fetch scripts from GitHub
 
-**Do this first, before any data queries.** If it fails, abort immediately.
-
-The renderer is a pure-Python email-safe HTML generator — no JS, no `<style>` blocks,
-all inline CSS. Output is ~20KB for 16 agents, ~30KB for 28 agents. Gmail-compatible.
+**Do this first.** Fetch both scripts in parallel. If either fails, abort immediately.
 
 ```python
 import base64
 
-result = mcp__github__get_file_contents(
-    owner="MattAtAloware",
-    repo="aloware-report-scripts",
+# Fetch query_report.py
+r1 = mcp__github__get_file_contents(
+    owner="MattAtAloware", repo="aloware-report-scripts",
+    path="agent-status-report/query_report.py"
+)
+open("/tmp/agent-status/query_report.py", "w").write(
+    base64.b64decode(r1["content"]).decode("utf-8")
+)
+
+# Fetch build_email.py
+r2 = mcp__github__get_file_contents(
+    owner="MattAtAloware", repo="aloware-report-scripts",
     path="agent-status-report/build_email.py"
 )
-content = base64.b64decode(result["content"]).decode("utf-8")
-open("/tmp/agent-status/build_email.py", "w").write(content)
+open("/tmp/agent-status/build_email.py", "w").write(
+    base64.b64decode(r2["content"]).decode("utf-8")
+)
 ```
 
 | Condition | Action |
 |-----------|--------|
-| Fetch succeeds | Continue to Step 1 |
-| 404 or any error | **ABORT.** Tell user: "Could not fetch the renderer from GitHub." |
+| Both fetched | Continue |
+| Either fails | **ABORT.** Tell user which script could not be fetched. |
 
 ---
 
-## Step 1 — Fetch agent list
+## Step 1 — Get agent-list SQL from script
 
-```sql
-SELECT DISTINCT aa.user_id
-FROM aloware.agent_audits aa
-WHERE aa.company_id = {COMPANY_ID}
-  AND aa.property   = 'agent_status'
-  AND aa.created_at >= '{START_DATE} 00:00:00'
-  AND aa.created_at <  '{END_DATE_EXCLUSIVE} 00:00:00'
-ORDER BY aa.user_id
+```bash
+python /tmp/agent-status/query_report.py generate-sql \
+  --company-id {COMPANY_ID} \
+  --start-date "{START_DATE}" \
+  --end-date   "{END_DATE}" \
+  --agent-list-only
 ```
 
-`database_id: 2`, `row_limit: 500`. Collect all user_ids.
-
-If 0 rows: tell user "No agent activity found for this company/date range." Do not proceed.
+This prints a JSON object. Extract the `"sql"` field. That is the exact SQL to run next.
+Also capture `"start_date"`, `"end_date"`, `"end_date_exclusive"` from the output —
+use these values for all subsequent steps (they are the resolved dates).
 
 ---
 
-## Step 2 — Query status data in batches of 60
+## Step 2 — Execute agent-list SQL via Metabase
 
-**Why batches:** `metabase_execute` silently truncates at 500 rows. Large clients have
-200+ agents × 7 statuses = 1,400+ rows/day. Batch by 60 user_ids (= 420 rows max per
-call). Run the query below once per batch, accumulate all rows — the renderer handles
-final aggregation, so pass the full raw unmerged list.
+Run the SQL from Step 1 verbatim:
+- `database_id: 2`
+- `row_limit: 500`
 
-**How duration is calculated — LEAD() with explicit midnight cap, not SUM(duration):**
+Collect all `user_id` values from the result rows into a JSON array: `[id1, id2, ...]`
 
-The `duration` column in `agent_audits` stores how long the agent was in the *previous*
-(from) status before transitioning — **not** the current status. It can represent days of
-accumulated time if an agent hasn't logged in recently and is completely unreliable for
-daily reports.
+If 0 rows: tell user "No agent activity found for this company/date range." Stop.
 
-Instead, use `LEAD()` to compute actual wall-clock time between consecutive transitions:
-- Use `"to"` as the status key (the status the agent *entered*)
-- Cap trailing active statuses at `{END_DATE_EXCLUSIVE} 00:00:00` (midnight) — this
-  gives the agent credit for time up to end of day without bleeding into tomorrow
-- When `next_at IS NULL AND status_code = '0'` (trailing offline), set `ended_at =
-  started_at` so the `WHERE ended_at > started_at` filter removes it — this prevents
-  phantom offline hours for agents who logged off before midnight
-- Use `DATEDIFF('second', started_at, ended_at)` for clean, readable duration math
+---
 
-`{BATCH_USER_IDS}` = comma-separated ids from current batch, e.g. `123,456,789`
-`{END_DATE_EXCLUSIVE}` = day after end_date
+## Step 3 — Get batch SQL queries from script
 
-```sql
-WITH transitions AS (
-  SELECT
-    aa.user_id,
-    (u.first_name || ' ' || u.last_name)  AS agent_name,
-    aa."to"                                AS status_code,
-    aa.created_at                          AS started_at,
-    LEAD(aa.created_at) OVER (
-      PARTITION BY aa.user_id
-      ORDER BY aa.created_at
-    )                                      AS next_at
-  FROM aloware.agent_audits aa
-  JOIN aloware.users u ON u.id = aa.user_id
-  WHERE aa.company_id = {COMPANY_ID}
-    AND aa.user_id    IN ({BATCH_USER_IDS})
-    AND aa.property   = 'agent_status'
-    AND aa.created_at >= '{START_DATE} 00:00:00'
-    AND aa.created_at <  '{END_DATE_EXCLUSIVE} 00:00:00'
-    AND aa."to"       IN ('0','1','2','3','4','5','6')
-),
-capped AS (
-  SELECT
-    agent_name,
-    status_code,
-    started_at,
-    CASE
-      WHEN next_at IS NOT NULL THEN next_at
-      WHEN status_code = '0'   THEN started_at
-      ELSE '{END_DATE_EXCLUSIVE} 00:00:00'
-    END AS ended_at
-  FROM transitions
-)
-SELECT
-  agent_name,
-  status_code,
-  SUM(DATEDIFF('second', started_at, ended_at)) AS total_seconds
-FROM capped
-WHERE ended_at > started_at
-GROUP BY agent_name, status_code
-ORDER BY agent_name, status_code
+```bash
+python /tmp/agent-status/query_report.py generate-sql \
+  --company-id {COMPANY_ID} \
+  --start-date "{START_DATE}" \
+  --end-date   "{END_DATE}" \
+  --user-ids   '{USER_IDS_JSON_ARRAY}'
 ```
 
-`database_id: 2`, `row_limit: 500`.
-
-**Status codes:** 0=Offline 1=Available 2=Busy 3=On Break 4=On Call 5=Wrap-Up 6=Ringing
-
-**Note on legacy data:** Some rows contain non-numeric values in `"to"` (e.g. `"offline"`
-from older app versions). The `IN ('0',...,'6')` filter excludes these automatically.
+This prints a JSON object with a `"queries"` array. Each element has:
+- `"sql"` — the exact SQL to run
+- `"database_id"` — always 2
+- `"row_limit"` — always 500
+- `"batch"` / `"total_batches"` — for progress tracking
 
 ---
 
-## Step 3 — Write data contract JSON
+## Step 4 — Execute batch SQL queries via Metabase
 
-After all batches complete, write `/tmp/agent-status/report_data.json`.
-This is the only interface between Claude and the renderer — no other data passing.
+Run each query from Step 3 verbatim against Metabase (`database_id: 2`, `row_limit: 500`).
+Accumulate all result rows across all batches into a single list.
 
+Each row has: `agent_name`, `status_code`, `total_seconds`.
+
+Write the accumulated rows to `/tmp/agent-status/rows.json`:
 ```python
 import json
-from datetime import datetime
-
-test_mode = True  # flip to False only if user said "send live"
-
-contract = {
-    "meta": {
-        "skill_name": "agent-status-time-report",
-        "company_name": company_name,
-        "company_id": company_id,
-        "date_range": {"start": start_date, "end": end_date},
-        "output_format": "email",
-        "test_mode": test_mode,
-        "generated_at": datetime.now().isoformat()
-    },
-    "rows": all_accumulated_rows   # raw list across all batches — renderer aggregates internally
-}
-
-with open("/tmp/agent-status/report_data.json", "w") as f:
-    json.dump(contract, f)
+json.dump(all_rows, open("/tmp/agent-status/rows.json", "w"))
 ```
-
-Each row: `{"agent_name": "Ana Cruz", "status_code": "1", "total_seconds": 8435}`
 
 ---
 
-## Step 4 — Run renderer
+## Step 5 — Build data contract
 
-The renderer is pure Python — **no pip installs needed**. No matplotlib, no PIL, no
-external dependencies. It generates email-safe HTML with all inline CSS, no JavaScript.
+```bash
+python /tmp/agent-status/query_report.py build-contract \
+  --company-id   {COMPANY_ID} \
+  --company-name "{COMPANY_NAME}" \
+  --start-date   "{START_DATE}" \
+  --end-date     "{END_DATE}" \
+  --rows-json    /tmp/agent-status/rows.json \
+  --out          /tmp/agent-status/report_data.json \
+  {--test-mode if test_mode else ""}
+```
+
+| Condition | Action |
+|-----------|--------|
+| Exits 0 | Continue |
+| Exits non-zero | Show error. Do not proceed. |
+
+---
+
+## Step 6 — Run renderer
 
 ```bash
 python /tmp/agent-status/build_email.py \
@@ -229,40 +192,46 @@ python /tmp/agent-status/build_email.py \
 
 ---
 
-## Step 5 — Deliver via Gmail MCP
+## Step 7 — Deliver via Gmail MCP
 
-**CRITICAL: Do NOT use a subagent for delivery.** Subagents truncate or improvise HTML
-when the body is large. Instead, read the HTML directly and call `gmail_create_draft`
-from the main context.
+**CRITICAL: Do NOT use a subagent for delivery.** Subagents truncate or improvise HTML.
+Always read the file directly and call `gmail_create_draft` from the main context.
 
-**For files ≤20KB (~16 agents):** Read the file directly with the Read tool, then pass
-the full contents to `gmail_create_draft`.
-
-**For files >20KB (~28+ agents):** The Read tool has a 10,000-token limit. Split the
-HTML into two parts using Python:
+**The rendered HTML contains embedded base64 JPEG charts (~40-50KB total).** The Read
+tool will hit its token limit on the raw file. Strip the base64 image data before reading:
 
 ```python
+import re
 html = open('/tmp/agent-status/output.html').read()
+stripped = re.sub(r'src="data:image/[^"]+?"', 'src=""', html)
+open('/tmp/agent-status/output_stripped.html', 'w').write(stripped)
+```
+
+Then read `output_stripped.html` and pass to `gmail_create_draft`. Gmail strips
+embedded images anyway, so no visual content is lost.
+
+**If the stripped file still exceeds the Read tool limit** (rare, >30 agents), split:
+```python
+html = open('/tmp/agent-status/output_stripped.html').read()
 mid = len(html) // 2
 split_point = html.index('</tr>', mid) + len('</tr>')
 open('/tmp/agent-status/part1.html', 'w').write(html[:split_point])
 open('/tmp/agent-status/part2.html', 'w').write(html[split_point:])
 ```
-
-Read both parts, then concatenate when calling `gmail_create_draft`.
+Read both parts and concatenate when calling `gmail_create_draft`.
 
 ```
 Call gmail_create_draft with:
   to          = "matthew@aloware.com" (test_mode=true) OR <recipients> (live)
   subject     = "[TEST] Agent Status Time Report – {company} – {date_label}" (test_mode=true)
                 OR "Agent Status Time Report – {company} – {date_label}" (live)
-  body        = <full HTML contents — part1 + part2, must start with <!DOCTYPE html>>
+  body        = <full stripped HTML — must start with <!DOCTYPE html>>
   contentType = "text/html"   ← camelCase, critical
 ```
 
 ---
 
-## Step 6 — Confirm
+## Step 8 — Confirm
 
 Reply with: agent count, date range, draft recipient(s), and whether TEST_MODE was active.
 
@@ -272,35 +241,26 @@ Reply with: agent count, date range, draft recipient(s), and whether TEST_MODE w
 
 | Condition | Action |
 |-----------|--------|
-| GitHub renderer fetch fails | **ABORT immediately** |
-| Step 1 returns 0 rows | Tell user, confirm company_id and date range, stop |
-| Build script exits non-zero | Show traceback. Do not freestyle HTML. |
+| GitHub script fetch fails | **ABORT immediately** |
+| Step 2 returns 0 rows | Tell user, confirm company_id and date range, stop |
+| query_report.py exits non-zero | Show error output. Do not freestyle. |
+| build_email.py exits non-zero | Show full traceback. Do not improvise HTML. |
 | `gmail_create_draft` fails | Show error. Ask user if they want to retry. |
 
 ---
 
 ## Critical rules
 
-- **Use LEAD() on `"to"`, not `SUM(duration)` on `"from"`** — the `duration` column stores
-  time in the *previous* status and can represent days of accumulated time. LEAD() computes
-  actual wall-clock time between consecutive transitions, which is the only correct approach.
-- **Cap trailing active statuses at midnight** — when `next_at IS NULL` and status is not
-  Offline, set `ended_at = '{END_DATE_EXCLUSIVE} 00:00:00'`. This gives credit for the
-  remaining shift without bleeding into tomorrow.
-- **Strip trailing offline** — when the last event is going Offline (status 0) and
-  `next_at IS NULL`, set `ended_at = started_at` so the `WHERE ended_at > started_at`
-  filter removes it. This prevents phantom offline hours for agents who logged off before midnight.
-- **Use `DATEDIFF('second', started_at, ended_at)`** — cleaner and more readable than
-  `EXTRACT(EPOCH FROM ...)` for duration math.
-- **Filter `"to" IN ('0',...,'6')`** — legacy rows may have string values like `"offline"`
-  which must be excluded or they inflate the wrong bucket.
-- **Always batch by 60 user_ids** — 200-agent clients = 1,400 rows/day, silent truncation at 500.
-- **No activity found?** Don't send. Tell the user and confirm the date/company_id before retrying.
-- **database_id is 2.** Do not use saved card 2477 — permission errors.
+- **SQL lives in `query_report.py`, not here.** Never write SQL inline. Always get it
+  from the script's `generate-sql` command and execute it verbatim.
+- **Always batch.** `query_report.py` handles batch sizing (60 user_ids). Don't override it.
+- **No activity found?** Don't send. Tell the user and confirm the date/company_id.
+- **database_id is 2.** Never use saved cards — permission errors.
 - **TEST_MODE is always on by default.** Never send live without explicit user confirmation.
-- **No pip installs needed.** The renderer has zero external dependencies.
-- **Never use a subagent to deliver email.** Subagents truncate large HTML bodies or
-  improvise their own HTML. Always read the file directly and call `gmail_create_draft`
-  from the main context. For files >20KB, split into two parts first.
-- **Gmail strips JavaScript.** The renderer must produce email-safe HTML — no `<script>`,
+- **No pip installs needed.** Both scripts have zero external dependencies beyond matplotlib/PIL
+  (already installed in the sandbox).
+- **Never use a subagent to deliver email.** Always call `gmail_create_draft` from main context.
+- **Always strip base64 images before reading output.html.** The Read tool will reject the
+  raw file due to token limits. The stripped version is functionally identical for email delivery.
+- **Gmail strips JavaScript.** The renderer produces email-safe HTML — no `<script>`,
   no `<style>` blocks, all CSS inline. Table-based layout only.
