@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-build_email.py - Generate a fully static, email-safe HTML report with chart images.
+build_email.py - Generate a fully static, email-safe HTML report.
 
-Supports two chart modes:
-  1. Inline base64 (default) — charts embedded directly in HTML. Large files (~60-140KB).
-  2. External URLs (--chart-dir) — charts saved as separate .jpg files, HTML uses
-     {{BAR_CHART_URL}} and {{DONUT_CHART_URL}} placeholders for the caller to replace
-     with hosted URLs. HTML is ~10-15KB.
+Pure Python — zero external dependencies (no matplotlib, no PIL, no pip installs).
+Produces self-contained inline-CSS HTML that renders identically in Gmail, Outlook,
+and Apple Mail. No images, no JavaScript, no <style> blocks.
 
-Reconstructed from source. Supports --rows (legacy) and --input (data contract) modes.
+Usage:
+  python build_email.py --input report_data.json --out output.html
+  python build_email.py --rows '[...]' --company "Acme" --start-date 2026-04-13 --out output.html
 """
 
 import argparse
-import base64
-import io
 import json
 import sys
 from collections import defaultdict
@@ -41,8 +39,7 @@ STATUS_COLORS = {
 }
 CHART_ORDER = ["1", "4", "5", "2", "3", "6", "0"]
 
-
-VALID_STATUS_CODES = set(STATUS_LABELS.keys())  # {"0","1","2","3","4","5","6"}
+VALID_STATUS_CODES = set(STATUS_LABELS.keys())
 
 
 def aggregate_rows(rows: list) -> dict:
@@ -56,7 +53,7 @@ def aggregate_rows(rows: list) -> dict:
         name = row.get("agent_name", "Unknown")
         code = str(row.get("status_code", "0"))
         if code not in VALID_STATUS_CODES:
-            continue  # skip legacy/invalid status codes like "offline"
+            continue
         secs = int(row.get("total_seconds", 0) or 0)
         agents[name][code] += secs
     return dict(agents)
@@ -90,115 +87,6 @@ def format_date_label(start_str: str, end_str: str = None) -> str:
         return end_str or start_str
 
 
-def to_base64_jpeg(fig, quality: int = 55) -> str:
-    from PIL import Image
-    buf_png = io.BytesIO()
-    fig.savefig(buf_png, format="png", dpi=72, bbox_inches="tight",
-                facecolor=fig.get_facecolor())
-    buf_png.seek(0)
-    img = Image.open(buf_png).convert("RGB")
-    buf_jpg = io.BytesIO()
-    img.save(buf_jpg, format="JPEG", quality=quality, optimize=True)
-    buf_jpg.seek(0)
-    return base64.b64encode(buf_jpg.read()).decode("utf-8")
-
-
-def to_jpeg_bytes(fig, quality: int = 55) -> bytes:
-    """Render figure to JPEG bytes (for file-based chart output)."""
-    from PIL import Image
-    buf_png = io.BytesIO()
-    fig.savefig(buf_png, format="png", dpi=72, bbox_inches="tight",
-                facecolor=fig.get_facecolor())
-    buf_png.seek(0)
-    img = Image.open(buf_png).convert("RGB")
-    buf_jpg = io.BytesIO()
-    img.save(buf_jpg, format="JPEG", quality=quality, optimize=True)
-    buf_jpg.seek(0)
-    return buf_jpg.read()
-
-
-def make_stacked_bar(agents: dict):
-    """Returns fig for the stacked bar chart. Caller decides output format."""
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as mpatches
-
-    sorted_agents = sorted(
-        agents.items(),
-        key=lambda kv: kv[1].get("4", 0) + kv[1].get("1", 0)
-    )
-    agent_names = [a for a, _ in sorted_agents]
-    n = len(agent_names)
-
-    fig_height = max(4, n * 0.6 + 2)
-    fig, ax = plt.subplots(figsize=(11, fig_height), facecolor="#f8f9fa")
-    ax.set_facecolor("#ffffff")
-
-    lefts = [0.0] * n
-    for code in CHART_ORDER:
-        vals = [s.get(code, 0) / 3600 for _, s in sorted_agents]
-        ax.barh(agent_names, vals, left=lefts,
-                color=STATUS_COLORS[code],
-                label=STATUS_LABELS[code],
-                height=0.65)
-        lefts = [l + v for l, v in zip(lefts, vals)]
-
-    ax.set_xlabel("Hours", fontsize=10, color="#6b7280")
-    ax.set_title("Time in Each Status per Agent - sorted by On Call + Available",
-                 fontsize=11, color="#1e2433", pad=10, loc="left")
-    ax.tick_params(axis="y", labelsize=9, colors="#1e2433")
-    ax.tick_params(axis="x", labelsize=8, colors="#6b7280")
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_visible(False)
-    ax.grid(axis="x", color="#f0f0f0", linewidth=0.8)
-    ax.set_axisbelow(True)
-
-    handles = [
-        mpatches.Patch(color=STATUS_COLORS[c], label=STATUS_LABELS[c])
-        for c in CHART_ORDER
-    ]
-    ax.legend(handles=handles, loc="lower right", fontsize=8, framealpha=0.9, ncol=4)
-
-    fig.tight_layout()
-    return fig
-
-
-def make_donut(agents: dict):
-    """Returns fig for the donut chart. Caller decides output format."""
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    totals = {code: sum(s.get(code, 0) for s in agents.values()) for code in CHART_ORDER}
-    labels  = [STATUS_LABELS[c] for c in CHART_ORDER if totals[c] > 0]
-    sizes   = [totals[c] for c in CHART_ORDER if totals[c] > 0]
-    colors  = [STATUS_COLORS[c] for c in CHART_ORDER if totals[c] > 0]
-
-    fig, ax = plt.subplots(figsize=(5, 4.5), facecolor="#f8f9fa")
-    ax.set_facecolor("#f8f9fa")
-
-    wedges, texts, autotexts = ax.pie(
-        sizes, labels=None, colors=colors,
-        autopct=lambda p: f"{p:.1f}%" if p > 4 else "",
-        pctdistance=0.78,
-        wedgeprops={"width": 0.5, "edgecolor": "white", "linewidth": 2},
-        startangle=90,
-    )
-    for at in autotexts:
-        at.set_fontsize(7)
-        at.set_color("white")
-        at.set_fontweight("bold")
-
-    ax.set_title("Team-Wide Status Distribution", fontsize=11, color="#1e2433", pad=8)
-    ax.legend(wedges, labels, loc="lower center", fontsize=8,
-              bbox_to_anchor=(0.5, -0.08), ncol=2, framealpha=0.9)
-
-    fig.tight_layout()
-    return fig
-
-
 def compute_kpis(agents: dict) -> dict:
     totals = {code: sum(s.get(code, 0) for s in agents.values()) for code in STATUS_LABELS}
     grand = sum(totals.values())
@@ -214,13 +102,12 @@ def build_exec_summary_html(agents: dict) -> str:
     total_all = sum(sum(s.values()) for s in agents.values())
     util_pct = (total_active / total_all * 100) if total_all else 0.0
 
-    # Sort by active% DESC, then total active seconds DESC as tiebreaker.
     ranked = sorted(
         agents.items(),
         key=lambda kv: (
             sum(v for k, v in kv[1].items() if k != "0") /
             max(sum(kv[1].values()), 1) * 100,
-            sum(v for k, v in kv[1].items() if k != "0"),  # tiebreak: total active seconds
+            sum(v for k, v in kv[1].items() if k != "0"),
         ),
         reverse=True
     )
@@ -231,12 +118,12 @@ def build_exec_summary_html(agents: dict) -> str:
         return act / tot * 100
 
     top_name, top_s = ranked[0]
-    top_pct   = agent_active_pct(top_s)
+    top_pct = agent_active_pct(top_s)
     top_oncall = top_s.get("4", 0)
 
     low_agents = [(name, agent_active_pct(s)) for name, s in ranked if agent_active_pct(s) < 45]
     TARGET = 73
-    delta  = util_pct - TARGET
+    delta = util_pct - TARGET
 
     oncall_str = f" and {fmt_hms(top_oncall)} on call" if top_oncall else ""
     narrative_parts = [
@@ -304,13 +191,8 @@ def build_exec_summary_html(agents: dict) -> str:
     )
 
 
-def build_email_html(agents, company, date_label, company_id, bar_src, donut_src):
-    """Build the full email HTML.
-
-    bar_src / donut_src can be:
-      - A base64 data URI string (inline mode)
-      - A placeholder URL like "{{BAR_CHART_URL}}" (external mode)
-    """
+def build_email_html(agents, company, date_label, company_id):
+    """Build the full email HTML. No images — pure table-based layout."""
     kpis = compute_kpis(agents)
 
     sorted_agents = sorted(
@@ -341,9 +223,9 @@ def build_email_html(agents, company, date_label, company_id, bar_src, donut_src
     table_rows = ""
     for i, (agent_name, s) in enumerate(sorted_agents):
         active = sum(v for k, v in s.items() if k != "0")
-        total   = active + s.get("0", 0)
+        total = active + s.get("0", 0)
         pct_val = f"{active/total*100:.1f}%" if total else "0.0%"
-        pct_w    = f"{active/total*100:.0f}%" if total else "0%"
+        pct_w = f"{active/total*100:.0f}%" if total else "0%"
 
         def cell(code, _s=s):
             val = _s.get(code, 0)
@@ -388,19 +270,6 @@ def build_email_html(agents, company, date_label, company_id, bar_src, donut_src
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px">
   <tr>{kpi_cells}</tr></table>
 
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px"><tr>
-    <td width="68%" style="padding-right:8px;vertical-align:top">
-      <div style="background:#fff;border-radius:10px;padding:16px 20px">
-        <img src="{bar_src}" alt="Status per agent" width="100%" style="display:block;max-width:100%">
-      </div>
-    </td>
-    <td width="32%" style="vertical-align:top">
-      <div style="background:#fff;border-radius:10px;padding:16px 20px">
-        <img src="{donut_src}" alt="Status distribution" width="100%" style="display:block;max-width:100%">
-      </div>
-    </td>
-  </tr></table>
-
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff;border-radius:10px;margin-bottom:16px">
   <tr><td style="padding:20px 24px">
     <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:#1e2433">Agent Status Breakdown - {date_label}</div>
@@ -438,10 +307,6 @@ def main():
     parser.add_argument("--end-date",   default=None)
     parser.add_argument("--company-id", type=int, default=0)
     parser.add_argument("--out",        required=True)
-    parser.add_argument("--chart-dir",  default=None,
-                        help="Directory to save chart images as separate files. "
-                             "When set, HTML uses {{BAR_CHART_URL}} and {{DONUT_CHART_URL}} "
-                             "placeholders instead of inline base64.")
     args = parser.parse_args()
 
     if args.input:
@@ -471,47 +336,13 @@ def main():
         print("No agent data found - aborting.", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Rendering charts for {len(agents)} agents...")
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
+    print(f"Rendering report for {len(agents)} agents...")
 
-    bar_fig   = make_stacked_bar(agents)
-    donut_fig = make_donut(agents)
-
-    if args.chart_dir:
-        # External mode: save charts as files, use placeholders in HTML
-        import os
-        os.makedirs(args.chart_dir, exist_ok=True)
-
-        bar_path   = os.path.join(args.chart_dir, "bar_chart.jpg")
-        donut_path = os.path.join(args.chart_dir, "donut_chart.jpg")
-
-        bar_bytes   = to_jpeg_bytes(bar_fig)
-        donut_bytes = to_jpeg_bytes(donut_fig)
-
-        with open(bar_path, "wb") as f:
-            f.write(bar_bytes)
-        with open(donut_path, "wb") as f:
-            f.write(donut_bytes)
-
-        print(f"Charts saved: {bar_path} ({len(bar_bytes):,} bytes), {donut_path} ({len(donut_bytes):,} bytes)")
-
-        bar_src   = "{{BAR_CHART_URL}}"
-        donut_src = "{{DONUT_CHART_URL}}"
-    else:
-        # Inline mode: embed base64 directly (legacy behavior)
-        bar_src   = f"data:image/jpeg;base64,{to_base64_jpeg(bar_fig)}"
-        donut_src = f"data:image/jpeg;base64,{to_base64_jpeg(donut_fig)}"
-
-    plt.close(bar_fig)
-    plt.close(donut_fig)
-
-    html = build_email_html(agents, company, date_label, company_id, bar_src, donut_src)
+    html = build_email_html(agents, company, date_label, company_id)
 
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(html)
-    print(f"Email HTML written to: {args.out}")
+    print(f"Email HTML written to: {args.out} ({len(html):,} chars)")
 
 
 if __name__ == "__main__":
