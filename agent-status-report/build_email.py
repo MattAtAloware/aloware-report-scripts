@@ -1,1 +1,459 @@
-IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwojIC0qLSBjb2Rpbmc6IHV0Zi04IC0qLQoiIiIKYnVpbGRfZW1haWwucHkgLSBHZW5lcmF0ZSBhIGZ1bGx5IHN0YXRpYywgZW1haWwtc2FmZSBIVE1MIHJlcG9ydCB3aXRoIGVtYmVkZGVkIGNoYXJ0IGltYWdlcy4KUmVjb25zdHJ1Y3RlZCBmcm9tIHNvdXJjZS4gU3VwcG9ydHMgLS1yb3dzIChsZWdhY3kpIGFuZCAtLWlucHV0IChkYXRhIGNvbnRyYWN0KSBtb2Rlcy4KIiIiCgppbXBvcnQgYXJncGFyc2UKaW1wb3J0IGJhc2U2NAppbXBvcnQgaW8KaW1wb3J0IGpzb24KaW1wb3J0IHN5cwpmcm9tIGNvbGxlY3Rpb25zIGltcG9ydCBkZWZhdWx0ZGljdApmcm9tIGRhdGV0aW1lIGltcG9ydCBkYXRldGltZQoKClNUQVRVU19MQUJFTFMgPSB7CiAgICAiMCI6ICJPZmZsaW5lIiwKICAgICIxIjogIkF2YWlsYWJsZSIsCiAgICAiMiI6ICJCdXN5IiwKICAgICIzIjogIk9uIEJyZWFrIiwKICAgICI0IjogIk9uIENhbGwiLAogICAgIjUiOiAiV3JhcC1VcCIsCiAgICAiNiI6ICJSaW5naW5nIiwKfQpTVEFUVVNfQ09MT1JTID0gewogICAgIjAiOiAiIzk0YTNiOCIsCiAgICAiMSI6ICIjMjJjNTVlIiwKICAgICIyIjogIiNmOTczMTYiLAogICAgIjMiOiAiI2VhYjMwOCIsCiAgICAiNCI6ICIjM2I4MmY2IiwKICAgICI1IjogIiNhODU1ZjciLAogICAgIjYiOiAiIzA2YjZkNCIsCn0KQ0hBUlRfT1JERVIgPSBbIjEiLCAiNCIsICI1IiwgIjIiLCAiMyIsICI2IiwgIjAiXQoKClZBTElEX1NUQVRVU19DT0RFUyA9IHNldChTVEFUVVNfTEFCRUxTLmtleXMoKSkgICMgeyIwIiwiMSIsIjIiLCIzIiwiNCIsIjUiLCI2In0KCgpkZWYgYWdncmVnYXRlX3Jvd3Mocm93czogbGlzdCkgLT4gZGljdDoKICAgICIiIkFnZ3JlZ2F0ZSByYXcgcXVlcnkgcm93cyBpbnRvIHthZ2VudF9uYW1lOiB7c3RhdHVzX2NvZGU6IHRvdGFsX3NlY29uZHN9fS4KCiAgICBGaWx0ZXJzIG91dCBhbnkgbm9uLW51bWVyaWMgc3RhdHVzIGNvZGVzIChlLmcuIGxlZ2FjeSAib2ZmbGluZSIgc3RyaW5nIHZhbHVlcykKICAgIHRvIGF2b2lkIGluZmxhdGluZyBvciBtaXNhdHRyaWJ1dGluZyB0aW1lLiBPbmx5IGNvZGVzIDAtNiBhcmUgdmFsaWQuCiAgICAiIiIKICAgIGFnZW50cyA9IGRlZmF1bHRkaWN0KGxhbWJkYToge2s6IDAgZm9yIGsgaW4gU1RBVFVTX0xBQkVMU30pCiAgICBmb3Igcm93IGluIHJvd3M6CiAgICAgICAgbmFtZSA9IHJvdy5nZXQoImFnZW50X25hbWUiLCAiVW5rbm93biIpCiAgICAgICAgY29kZSA9IHN0cihyb3cuZ2V0KCJzdGF0dXNfY29kZSIsICIwIikpCiAgICAgICAgaWYgY29kZSBub3QgaW4gVkFMSURfU1RBVFVTX0NPREVTOgogICAgICAgICAgICBjb250aW51ZSAgIyBza2lwIGxlZ2FjeS9pbnZhbGlkIHN0YXR1cyBjb2RlcyBsaWtlICJvZmZsaW5lIgogICAgICAgIHNlY3MgPSBpbnQocm93LmdldCgidG90YWxfc2Vjb25kcyIsIDApIG9yIDApCiAgICAgICAgYWdlbnRzW25hbWVdW2NvZGVdICs9IHNlY3MKICAgIHJldHVybiBkaWN0KGFnZW50cykKCgpkZWYgZm10X2htcyhzZWNvbmRzOiBpbnQpIC0+IHN0cjoKICAgIGlmIG5vdCBzZWNvbmRzOgogICAgICAgIHJldHVybiAiLSIKICAgIGggPSBzZWNvbmRzIC8vIDM2MDAKICAgIG0gPSAoc2Vjb25kcyAlIDM2MDApIC8vIDYwCiAgICBzID0gc2Vjb25kcyAlIDYwCiAgICBpZiBoOgogICAgICAgIHJldHVybiBmIntofWgge219bSIKICAgIGlmIG06CiAgICAgICAgcmV0dXJuIGYie219bSB7c31zIgogICAgcmV0dXJuIGYie3N9cyIKCgpkZWYgZm9ybWF0X2RhdGVfbGFiZWwoc3RhcnRfc3RyOiBzdHIsIGVuZF9zdHI6IHN0ciA9IE5vbmUpIC0+IHN0cjoKICAgIHRyeToKICAgICAgICBzdGFydCA9IGRhdGV0aW1lLnN0cnB0aW1lKHN0YXJ0X3N0ciwgIiVZLSVtLSVkIikKICAgICAgICBpZiBub3QgZW5kX3N0ciBvciBlbmRfc3RyID09IHN0YXJ0X3N0cjoKICAgICAgICAgICAgcmV0dXJuIHN0YXJ0LnN0cmZ0aW1lKCIlQiAlLWQsICVZIikKICAgICAgICBlbmQgPSBkYXRldGltZS5zdHJwdGltZShlbmRfc3RyLCAiJVktJW0tJWQiKQogICAgICAgIGlmIHN0YXJ0LnllYXIgIT0gZW5kLnllYXI6CiAgICAgICAgICAgIHJldHVybiBmIntzdGFydC5zdHJmdGltZSgnJUIgJS1kLCAlWScpfSAtIHtlbmQuc3RyZnRpbWUoJyVCICUtZCwgJVknKX0iCiAgICAgICAgaWYgc3RhcnQubW9udGggIT0gZW5kLm1vbnRoOgogICAgICAgICAgICByZXR1cm4gZiJ7c3RhcnQuc3RyZnRpbWUoJyVCICUtZCcpfSAtIHtlbmQuc3RyZnRpbWUoJyVCICUtZCwgJVknKX0iCiAgICAgICAgcmV0dXJuIGYie3N0YXJ0LnN0cmZ0aW1lKCclQiAlLWQnKX0te2VuZC5zdHJmdGltZSgnJS1kLCAlWScpfSIKICAgIGV4Y2VwdCBFeGNlcHRpb246CiAgICAgICAgcmV0dXJuIGVuZF9zdHIgb3Igc3RhcnRfc3RyCgoKZGVmIHRvX2Jhc2U2NF9qcGVnKGZpZywgcXVhbGl0eTogaW50ID0gNTUpIC0+IHN0cjoKICAgIGZyb20gUElMIGltcG9ydCBJbWFnZQogICAgYnVmX3BuZyA9IGlvLkJ5dGVzSU8oKQogICAgZmlnLnNhdmVmaWcoYnVmX3BuZywgZm9ybWF0PSJwbmciLCBkcGk9NzIsIGJib3hfaW5jaGVzPSJ0aWdodCIsCiAgICAgICAgICAgICAgICBmYWNlY29sb3I9ZmlnLmdldF9mYWNlY29sb3IoKSkKICAgIGJ1Zl9wbmcuc2VlaygwKQogICAgaW1nID0gSW1hZ2Uub3BlbihidWZfcG5nKS5jb252ZXJ0KCJSR0IiKQogICAgYnVmX2pwZyA9IGlvLkJ5dGVzSU8oKQogICAgaW1nLnNhdmUoYnVmX2pwZywgZm9ybWF0PSJKUEVHIiwgcXVhbGl0eT1xdWFsaXR5LCBvcHRpbWl6ZT1UcnVlKQogICAgYnVmX2pwZy5zZWVrKDApCiAgICByZXR1cm4gYmFzZTY0LmI2NGVuY29kZShidWZfanBnLnJlYWQoKSkuZGVjb2RlKCJ1dGYtOCIpCgoKZGVmIG1ha2Vfc3RhY2tlZF9iYXIoYWdlbnRzOiBkaWN0KSAtPiBzdHI6CiAgICBpbXBvcnQgbWF0cGxvdGxpYgogICAgbWF0cGxvdGxpYi51c2UoIkFnZyIpCiAgICBpbXBvcnQgbWF0cGxvdGxpYi5weXBsb3QgYXMgcGx0CiAgICBpbXBvcnQgbWF0cGxvdGxpYi5wYXRjaGVzIGFzIG1wYXRjaGVzCgogICAgc29ydGVkX2FnZW50cyA9IHNvcnRlZCgKICAgICAgICBhZ2VudHMuaXRlbXMoKSwKICAgICAgICBrZXk9bGFtYmRhIGt2OiBrdlsxXS5nZXQoIjQiLCAwKSArIGt2WzFdLmdldCgiMSIsIDApCiAgICApCiAgICBhZ2VudF9uYW1lcyA9IFthIGZvciBhLCBfIGluIHNvcnRlZF9hZ2VudHNdCiAgICBuID0gbGVuKGFnZW50X25hbWVzKQoKICAgIGZpZ19oZWlnaHQgPSBtYXgoNCwgbiAqIDAuNiArIDIpCiAgICBmaWcsIGF4ID0gcGx0LnN1YnBsb3RzKGZpZ3NpemU9KDExLCBmaWdfaGVpZ2h0KSwgZmFjZWNvbG9yPSIjZjhmOWZhIikKICAgIGF4LnNldF9mYWNlY29sb3IoIiNmZmZmZmYiKQoKICAgIGxlZnRzID0gWzAuMF0gKiBuCiAgICBmb3IgY29kZSBpbiBDSEFSVF9PUkRFUjoKICAgICAgICB2YWxzID0gW3MuZ2V0KGNvZGUsIDApIC8gMzYwMCBmb3IgXywgcyBpbiBzb3J0ZWRfYWdlbnRzXQogICAgICAgIGF4LmJhcmgoYWdlbnRfbmFtZXMsIHZhbHMsIGxlZnQ9bGVmdHMsCiAgICAgICAgICAgICAgICBjb2xvcj1TVEFUVVNfQ09MT1JTW2NvZGVdLAogICAgICAgICAgICAgICAgbGFiZWw9U1RBVFVTX0xBQkVMU1tjb2RlXSwKICAgICAgICAgICAgICAgIGhlaWdodD0wLjY1KQogICAgICAgIGxlZnRzID0gW2wgKyB2IGZvciBsLCB2IGluIHppcChsZWZ0cywgdmFscyldCgogICAgYXguc2V0X3hsYWJlbCgiSG91cnMiLCBmb250c2l6ZT0xMCwgY29sb3I9IiM2YjcyODAiKQogICAgYXguc2V0X3RpdGxlKCJUaW1lIGluIEVhY2ggU3RhdHVzIHBlciBBZ2VudCAtIHNvcnRlZCBieSBPbiBDYWxsICsgQXZhaWxhYmxlIiwKICAgICAgICAgICAgICAgICBmb250c2l6ZT0xMSwgY29sb3I9IiMxZTI0MzMiLCBwYWQ9MTAsIGxvYz0ibGVmdCIpCiAgICBheC50aWNrX3BhcmFtcyhheGlzPSJ5IiwgbGFiZWxzaXplPTksIGNvbG9ycz0iIzFlMjQzMyIpCiAgICBheC50aWNrX3BhcmFtcyhheGlzPSJ4IiwgbGFiZWxzaXplPTgsIGNvbG9ycz0iIzZiNzI4MCIpCiAgICBheC5zcGluZXNbInRvcCJdLnNldF92aXNpYmxlKEZhbHNlKQogICAgYXguc3BpbmVzWyJyaWdodCJdLnNldF92aXNpYmxlKEZhbHNlKQogICAgYXguc3BpbmVzWyJsZWZ0Il0uc2V0X3Zpc2libGUoRmFsc2UpCiAgICBheC5ncmlkKGF4aXM9IngiLCBjb2xvcj0iI2YwZjBmMCIsIGxpbmV3aWR0aD0wLjgpCiAgICBheC5zZXRfYXhpc2JlbG93KFRydWUpCgogICAgaGFuZGxlcyA9IFsKICAgICAgICBtcGF0Y2hlcy5QYXRjaChjb2xvcj1TVEFUVVNfQ09MT1JTW2NdLCBsYWJlbD1TVEFUVVNfTEFCRUxTW2NdKQogICAgICAgIGZvciBjIGluIENIQVJUX09SREVSCiAgICBdCiAgICBheC5sZWdlbmQoaGFuZGxlcz1oYW5kbGVzLCBsb2M9Imxvd2VyIHJpZ2h0IiwgZm9udHNpemU9OCwgZnJhbWVhbHBoYT0wLjksIG5jb2w9NCkKCiAgICBmaWcudGlnaHRfbGF5b3V0KCkKICAgIGI2NCA9IHRvX2Jhc2U2NF9qcGVnKGZpZykKICAgIHBsdC5jbG9zZShmaWcpCiAgICByZXR1cm4gYjY0CgoKZGVmIG1ha2VfZG9udXQoYWdlbnRzOiBkaWN0KSAtPiBzdHI6CiAgICBpbXBvcnQgbWF0cGxvdGxpYgogICAgbWF0cGxvdGxpYi51c2UoIkFnZyIpCiAgICBpbXBvcnQgbWF0cGxvdGxpYi5weXBsb3QgYXMgcGx0CgogICAgdG90YWxzID0ge2NvZGU6IHN1bShzLmdldChjb2RlLCAwKSBmb3IgcyBpbiBhZ2VudHMudmFsdWVzKCkpIGZvciBjb2RlIGluIENIQVJUX09SREVSfQogICAgbGFiZWxzICA9IFtTVEFUVVNfTEFCRUxTW2NdIGZvciBjIGluIENIQVJUX09SREVSIGlmIHRvdGFsc1tjXSA+IDBdCiAgICBzaXplcyAgID0gW3RvdGFsc1tjXSBmb3IgYyBpbiBDSEFSVF9PUkRFUiBpZiB0b3RhbHNbY10gPiAwXQogICAgY29sb3JzICA9IFtTVEFUVVNfQ09MT1JTW2NdIGZvciBjIGluIENIQVJUX09SREVSIGlmIHRvdGFsc1tjXSA+IDBdCgogICAgZmlnLCBheCA9IHBsdC5zdWJwbG90cyhmaWdzaXplPSg1LCA0LjUpLCBmYWNlY29sb3I9IiNmOGY5ZmEiKQogICAgYXguc2V0X2ZhY2Vjb2xvcigiI2Y4ZjlmYSIpCgogICAgd2VkZ2VzLCB0ZXh0cywgYXV0b3RleHRzID0gYXgucGllKAogICAgICAgIHNpemVzLCBsYWJlbHM9Tm9uZSwgY29sb3JzPWNvbG9ycywKICAgICAgICBhdXRvcGN0PWxhbWJkYSBwOiBmIntwOi4xZn0lIiBpZiBwID4gNCBlbHNlICIiLAogICAgICAgIHBjdGRpc3RhbmNlPTAuNzgsCiAgICAgICAgd2VkZ2Vwcm9wcz17IndpZHRoIjogMC41LCAiZWRnZWNvbG9yIjogIndoaXRlIiwgImxpbmV3aWR0aCI6IDJ9LAogICAgICAgIHN0YXJ0YW5nbGU9OTAsCiAgICApCiAgICBmb3IgYXQgaW4gYXV0b3RleHRzOgogICAgICAgIGF0LnNldF9mb250c2l6ZSg3KQogICAgICAgIGF0LnNldF9jb2xvcigid2hpdGUiKQogICAgICAgIGF0LnNldF9mb250d2VpZ2h0KCJib2xkIikKCiAgICBheC5zZXRfdGl0bGUoIlRlYW0tV2lkZSBTdGF0dXMgRGlzdHJpYnV0aW9uIiwgZm9udHNpemU9MTEsIGNvbG9yPSIjMWUyNDMzIiwgcGFkPTgpCiAgICBheC5sZWdlbmQod2VkZ2VzLCBsYWJlbHMsIGxvYz0ibG93ZXIgY2VudGVyIiwgZm9udHNpemU9OCwKICAgICAgICAgICAgICBiYm94X3RvX2FuY2hvcj0oMC41LCAtMC4wOCksIG5jb2w9MiwgZnJhbWVhbHBoYT0wLjkpCgogICAgZmlnLnRpZ2h0X2xheW91dCgpCiAgICBiNjQgPSB0b19iYXNlNjRfanBlZyhmaWcpCiAgICBwbHQuY2xvc2UoZmlnKQogICAgcmV0dXJuIGI2NAoKCmRlZiBjb21wdXRlX2twaXMoYWdlbnRzOiBkaWN0KSAtPiBkaWN0OgogICAgdG90YWxzID0ge2NvZGU6IHN1bShzLmdldChjb2RlLCAwKSBmb3IgcyBpbiBhZ2VudHMudmFsdWVzKCkpIGZvciBjb2RlIGluIFNUQVRVU19MQUJFTFN9CiAgICBncmFuZCA9IHN1bSh0b3RhbHMudmFsdWVzKCkpCiAgICBwY3QgPSBsYW1iZGEgdjogZiJ7di9ncmFuZCoxMDA6LjFmfSUiIGlmIGdyYW5kIGVsc2UgIi0iCiAgICByZXR1cm4ge2NvZGU6IHsidGltZSI6IGZtdF9obXModG90YWxzW2NvZGVdKSwgInBjdCI6IHBjdCh0b3RhbHNbY29kZV0pfSBmb3IgY29kZSBpbiBTVEFUVVNfTEFCRUxTfQoKCmRlZiBidWlsZF9leGVjX3N1bW1hcnlfaHRtbChhZ2VudHM6IGRpY3QpIC0+IHN0cjoKICAgIHRvdGFsX2FjdGl2ZSA9IHN1bSgKICAgICAgICBzdW0odiBmb3IgaywgdiBpbiBzLml0ZW1zKCkgaWYgayAhPSAiMCIpCiAgICAgICAgZm9yIHMgaW4gYWdlbnRzLnZhbHVlcygpCiAgICApCiAgICB0b3RhbF9hbGwgPSBzdW0oc3VtKHMudmFsdWVzKCkpIGZvciBzIGluIGFnZW50cy52YWx1ZXMoKSkKICAgIHV0aWxfcGN0ID0gKHRvdGFsX2FjdGl2ZSAvIHRvdGFsX2FsbCAqIDEwMCkgaWYgdG90YWxfYWxsIGVsc2UgMC4wCgogICAgcmFua2VkID0gc29ydGVkKAogICAgICAgIGFnZW50cy5pdGVtcygpLAogICAgICAgIGtleT1sYW1iZGEga3Y6ICgKICAgICAgICAgICAgc3VtKHYgZm9yIGssIHYgaW4ga3ZbMV0uaXRlbXMoKSBpZiBrICE9ICIwIikgLwogICAgICAgICAgICBtYXgoc3VtKGt2WzFdLnZhbHVlcygpKSwgMSkgKiAxMDAKICAgICAgICApLAogICAgICAgIHJldmVyc2U9VHJ1ZQogICAgKQoKICAgIGRlZiBhZ2VudF9hY3RpdmVfcGN0KHMpOgogICAgICAgIGFjdCA9IHN1bSh2IGZvciBrLCB2IGluIHMuaXRlbXMoKSBpZiBrICE9ICIwIikKICAgICAgICB0b3QgPSBtYXgoc3VtKHMudmFsdWVzKCkpLCAxKQogICAgICAgIHJldHVybiBhY3QgLyB0b3QgKiAxMDAKCiAgICB0b3BfbmFtZSwgdG9wX3MgPSByYW5rZWRbMF0KICAgIHRvcF9wY3QgICA9IGFnZW50X2FjdGl2ZV9wY3QodG9wX3MpCiAgICB0b3Bfb25jYWxsID0gdG9wX3MuZ2V0KCI0IiwgMCkKCiAgICBsb3dfYWdlbnRzID0gWyhuYW1lLCBhZ2VudF9hY3RpdmVfcGN0KHMpKSBmb3IgbmFtZSwgcyBpbiByYW5rZWQgaWYgYWdlbnRfYWN0aXZlX3BjdChzKSA8IDQ1XQogICAgVEFSR0VUID0gNzMKICAgIGRlbHRhICA9IHV0aWxfcGN0IC0gVEFSR0VUCgogICAgb25jYWxsX3N0ciA9IGYiIGFuZCB7Zm10X2htcyh0b3Bfb25jYWxsKX0gb24gY2FsbCIgaWYgdG9wX29uY2FsbCBlbHNlICIiCiAgICBuYXJyYXRpdmVfcGFydHMgPSBbCiAgICAgICAgZic8c3Ryb25nPlRvcCBwZXJmb3JtZXI8L3N0cm9uZz4gd2FzICcsCiAgICAgICAgZic8c3BhbiBzdHlsZT0iY29sb3I6IzRhZGU4MDtmb250LXdlaWdodDo3MDAiPnt0b3BfbmFtZX08L3NwYW4+IHdpdGggJywKICAgICAgICBmJzxzcGFuIHN0eWxlPSJjb2xvcjojNGFkZTgwO2ZvbnQtd2VpZ2h0OjcwMCI+e3RvcF9wY3Q6LjBmfSUgYWN0aXZlIHRpbWU8L3NwYW4+e29uY2FsbF9zdHJ9LiAnCiAgICBdCgogICAgaWYgbG93X2FnZW50czoKICAgICAgICBuYW1lcyA9IFtuIGZvciBuLCBfIGluIGxvd19hZ2VudHNdCiAgICAgICAgaWYgbGVuKG5hbWVzKSA9PSAxOgogICAgICAgICAgICBuYW1lX3N0ciA9IG5hbWVzWzBdCiAgICAgICAgZWxpZiBsZW4obmFtZXMpID09IDI6CiAgICAgICAgICAgIG5hbWVfc3RyID0gIiBhbmQgIi5qb2luKG5hbWVzKQogICAgICAgIGVsc2U6CiAgICAgICAgICAgIG5hbWVfc3RyID0gIiwgIi5qb2luKG5hbWVzWzotMV0pICsgIiwgYW5kICIgKyBuYW1lc1stMV0KICAgICAgICBuYXJyYXRpdmVfcGFydHMuYXBwZW5kKAogICAgICAgICAgICBmJzxzcGFuIHN0eWxlPSJjb2xvcjojZjg3MTcxO2ZvbnQtd2VpZ2h0OjcwMCI+e2xlbihsb3dfYWdlbnRzKX0gYWdlbnQnCiAgICAgICAgICAgIGYneyJzIiBpZiBsZW4obG93X2FnZW50cyk+MSBlbHNlICIifTwvc3Bhbj4nCiAgICAgICAgICAgIGYnIC0ge25hbWVfc3RyfSAtIGhhZCAnCiAgICAgICAgICAgIGYnPHNwYW4gc3R5bGU9ImNvbG9yOiNmODcxNzE7Zm9udC13ZWlnaHQ6NzAwIj5sZXNzIHRoYW4gNDUlIGFjdGl2ZSB0aW1lPC9zcGFuPi4gJwogICAgICAgICkKCiAgICBpZiBhYnMoZGVsdGEpIDwgMToKICAgICAgICBuYXJyYXRpdmVfcGFydHMuYXBwZW5kKAogICAgICAgICAgICBmJ1RlYW0gdXRpbGl6YXRpb24gaXMgPHN0cm9uZyBzdHlsZT0iY29sb3I6I2ZmZiI+e3V0aWxfcGN0Oi4xZn0lPC9zdHJvbmc+LCcKICAgICAgICAgICAgZicgcmlnaHQgYXQgdGhlIHtUQVJHRVR9JSB0YXJnZXQuJwogICAgICAgICkKICAgIGVsaWYgZGVsdGEgPCAwOgogICAgICAgIG5hcnJhdGl2ZV9wYXJ0cy5hcHBlbmQoCiAgICAgICAgICAgIGYnVGVhbS13aWRlIHByb2R1Y3RpdmUgdGltZSBpcyA8c3Ryb25nIHN0eWxlPSJjb2xvcjojZmZmIj57dXRpbF9wY3Q6LjFmfSU8L3N0cm9uZz4nCiAgICAgICAgICAgIGYnIC0gPHNwYW4gc3R5bGU9ImNvbG9yOiNmYmZmMjQ7Zm9udC13ZWlnaHQ6NzAwIj57YWJzKGRlbHRhKTouMWZ9IHBvaW50cyBiZWxvdzwvc3Bhbj4nCiAgICAgICAgICAgIGYnIHRoZSB7VEFSR0VUfSUgdGFyZ2V0LicKICAgICAgICApCiAgICBlbHNlOgogICAgICAgIG5hcnJhdGl2ZV9wYXJ0cy5hcHBlbmQoCiAgICAgICAgICAgIGYnVGVhbS13aWRlIHByb2R1Y3RpdmUgdGltZSBpcyA8c3Ryb25nIHN0eWxlPSJjb2xvcjojZmZmIj57dXRpbF9wY3Q6LjFmfSU8L3N0cm9uZz4nCiAgICAgICAgICAgIGYnIC0gPHNwYW4gc3R5bGU9ImNvbG9yOiM0YWRlODA7Zm9udC13ZWlnaHQ6NzAwIj57ZGVsdGE6LjFmfSBwb2ludHMgYWJvdmU8L3NwYW4+JwogICAgICAgICAgICBmJyB0aGUge1RBUkdFVH0lIHRhcmdldC4nCiAgICAgICAgKQoKICAgIG5hcnJhdGl2ZV9odG1sID0gIiIuam9pbihuYXJyYXRpdmVfcGFydHMpCiAgICBzY29yZV9iYXJfd2lkdGggPSBmInttaW4odXRpbF9wY3QsIDEwMCk6LjFmfSUiCgogICAgcmV0dXJuICgKICAgICAgICBmJzx0YWJsZSB3aWR0aD0iMTAwJSIgY2VsbHBhZGRpbmc9IjAiIGNlbGxzcGFjaW5nPSIwIiBib3JkZXI9IjAiICcKICAgICAgICBmJ3N0eWxlPSJiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzFhMjc0NCAwJSwjMmMzZTZiIDEwMCUpO2JvcmRlci1yYWRpdXM6MTBweDttYXJnaW4tYm90dG9tOjE2cHgiPicKICAgICAgICBmJzx0cj4nCiAgICAgICAgZic8dGQgc3R5bGU9InBhZGRpbmc6MjRweCAyOHB4O3ZlcnRpY2FsLWFsaWduOm1pZGRsZSI+JwogICAgICAgIGYnPGRpdiBzdHlsZT0iZm9udC1zaXplOjEwcHg7Zm9udC13ZWlnaHQ6NzAwO2xldHRlci1zcGFjaW5nOjFweDt0ZXh0LXRyYW5zZm9ybTp1cHBlcmNhc2U7JwogICAgICAgIGYnY29sb3I6cmdiYSgyNTUsMjU1LDI1NSwwLjQ1KTttYXJnaW4tYm90dG9tOjEwcHgiPlRvZGF5XCdzIFN1bW1hcnk8L2Rpdj4nCiAgICAgICAgZic8ZGl2IHN0eWxlPSJmb250LXNpemU6MTRweDtsaW5lLWhlaWdodDoxLjY1O2NvbG9yOnJnYmEoMjU1LDI1NSwyNTUsMC44OCkiPntuYXJyYXRpdmVfaHRtbH08L2Rpdj4nCiAgICAgICAgZic8L3RkPicKICAgICAgICBmJzx0ZCBzdHlsZT0icGFkZGluZzoyNHB4IDI4cHg7dGV4dC1hbGlnbjpjZW50ZXI7dmVydGljYWwtYWxpZ246bWlkZGxlO3doaXRlLXNwYWNlOm5vd3JhcDtib3JkZXItbGVmdDoxcHggc29saWQgcmdiYSgyNTUsMjU1LDI1NSwwLjEpIj4nCiAgICAgICAgZic8ZGl2IHN0eWxlPSJmb250LXNpemU6NTJweDtmb250LXdlaWdodDo5MDA7bGluZS1oZWlnaHQ6MTtjb2xvcjojZmZmO2xldHRlci1zcGFjaW5nOi0xcHg7Ij4nCiAgICAgICAgZid7dXRpbF9wY3Q6LjFmfTxzcGFuIHN0eWxlPSJmb250LXNpemU6MjZweDtmb250LXdlaWdodDo2MDA7Y29sb3I6cmdiYSgyNTUsMjU1LDI1NSwwLjYpIj4lPC9zcGFuPjwvZGl2PicKICAgICAgICBmJzxkaXYgc3R5bGU9ImZvbnQtc2l6ZToxMHB4O2NvbG9yOnJnYmEoMjU1LDI1NSwyNTUsMC40NSk7dGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlO2xldHRlci1zcGFjaW5nOjFweDttYXJnaW4tdG9wOjRweDsiPicKICAgICAgICBmJ1RlYW0gVXRpbGl6YXRpb248L2Rpdj4nCiAgICAgICAgZic8dGFibGUgY2VsbHBhZGRpbmc9IjAiIGNlbGxzcGFjaW5nPSIwIiBib3JkZXI9IjAiIHN0eWxlPSJtYXJnaW46OHB4IGF1dG8gMDt3aWR0aDoxMTBweCI+JwogICAgICAgIGYnPHRyPjx0ZCBzdHlsZT0iYmFja2dyb3VuZDpyZ2JhKDI1NSwyNTUsMjU1LDAuMTUpO2JvcmRlci1yYWRpdXM6M3B4O2hlaWdodDo2cHg7b3ZlcmZsb3c6aGlkZGVuIj4nCiAgICAgICAgZic8ZGl2IHN0eWxlPSJiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCg5MGRlZywjNGFkZTgwLCMyMmM1NWUpO2hlaWdodDo2cHg7d2lkdGg6e3Njb3JlX2Jhcl93aWR0aH07Ym9yZGVyLXJhZGl1czozcHgiPjwvZGl2PicKICAgICAgICBmJzwvdGQ+PC90cj48L3RhYmxlPicKICAgICAgICBmJzwvdGQ+JwogICAgICAgIGYnPC90cj48L3RhYmxlPicKICAgICkKCgpkZWYgYnVpbGRfZW1haWxfaHRtbChhZ2VudHMsIGNvbXBhbnksIGRhdGVfbGFiZWwsIGNvbXBhbnlfaWQsIGJhcl9iNjQsIGRvbnV0X2I2NCk6CiAgICBrcGlzID0gY29tcHV0ZV9rcGlzKGFnZW50cykKCiAgICBzb3J0ZWRfYWdlbnRzID0gc29ydGVkKAogICAgICAgIGFnZW50cy5pdGVtcygpLAogICAgICAgIGtleT1sYW1iZGEga3Y6IGt2WzFdLmdldCgiNCIsIDApICsga3ZbMV0uZ2V0KCIxIiwgMCksCiAgICAgICAgcmV2ZXJzZT1UcnVlLAogICAgKQoKICAgIGtwaV9jb25maWdzID0gWwogICAgICAgICgiMSIsICJBdmFpbGFibGUiLCAgIiMyMmM1NWUiKSwKICAgICAgICAoIjQiLCAiT24gQ2FsbCIsICAgICIjM2I4MmY2IiksCiAgICAgICAgKCI1IiwgIldyYXAtVXAiLCAgICAiI2E4NTVmNyIpLAogICAgICAgICgiMiIsICJCdXN5IiwgICAgICAgIiNmOTczMTYiKSwKICAgICAgICAoIjMiLCAiT24gQnJlYWsiLCAgICIjZWFiMzA4IiksCiAgICAgICAgKCIwIiwgIk9mZmxpbmUiLCAgICAiIzk0YTNiOCIpLAogICAgXQogICAga3BpX2NlbGxzID0gIiIKICAgIGZvciBjb2RlLCBsYWJlbCwgY29sb3IgaW4ga3BpX2NvbmZpZ3M6CiAgICAgICAga3BpX2NlbGxzICs9ICgKICAgICAgICAgICAgZic8dGQgc3R5bGU9InBhZGRpbmc6MCA2cHggMCAwO3ZlcnRpY2FsLWFsaWduOnRvcCI+JwogICAgICAgICAgICBmJzxkaXYgc3R5bGU9ImJhY2tncm91bmQ6I2ZmZjtib3JkZXItcmFkaXVzOjhweDtwYWRkaW5nOjE0cHggMTZweDtib3JkZXItdG9wOjNweCBzb2xpZCB7Y29sb3J9O21pbi13aWR0aDoxMDBweCI+JwogICAgICAgICAgICBmJzxkaXYgc3R5bGU9ImZvbnQtc2l6ZToxMHB4O2NvbG9yOiM2YjcyODA7dGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlO2xldHRlci1zcGFjaW5nOi41cHg7bWFyZ2luLWJvdHRvbTo0cHgiPntsYWJlbH08L2Rpdj4nCiAgICAgICAgICAgIGYnPGRpdiBzdHlsZT0iZm9udC1zaXplOjIwcHg7Zm9udC13ZWlnaHQ6NzAwO2NvbG9yOiMxZTI0MzMiPntrcGlzW2NvZGVdWyJ0aW1lIl19PC9kaXY+JwogICAgICAgICAgICBmJzxkaXYgc3R5bGU9ImZvbnQtc2l6ZToxMXB4O2NvbG9yOiM2YjcyODA7bWFyZ2luLXRvcDoycHgiPntrcGlzW2NvZGVdWyJwY3QiXX0gb2YgdG90YWw8L2Rpdj4nCiAgICAgICAgICAgIGYnPC9kaXY+PC90ZD4nCiAgICAgICAgKQoKICAgIHRhYmxlX3Jvd3MgPSAiIgogICAgZm9yIGksIChhZ2VudF9uYW1lLCBzKSBpbiBlbnVtZXJhdGUoc29ydGVkX2FnZW50cyk6CiAgICAgICAgYWN0aXZlID0gc3VtKHYgZm9yIGssIHYgaW4gcy5pdGVtcygpIGlmIGsgIT0gIjAiKQogICAgICAgIHRvdGFsICAgPSBhY3RpdmUgKyBzLmdldCgiMCIsIDApCiAgICAgICAgcGN0X3ZhbCA9IGYie2FjdGl2ZS90b3RhbCoxMDA6LjFmfSUiIGlmIHRvdGFsIGVsc2UgIjAuMCUiCiAgICAgICAgcGN0X3cgICAgPSBmInthY3RpdmUvdG90YWwqMTAwOi4wZn0lIiBpZiB0b3RhbCBlbHNlICIwJSIKCiAgICAgICAgZGVmIGNlbGwoY29kZSwgX3M9cyk6CiAgICAgICAgICAgIHZhbCA9IF9zLmdldChjb2RlLCAwKQogICAgICAgICAgICByZXR1cm4gZm10X2htcyh2YWwpIGlmIHZhbCBlbHNlICc8c3BhbiBzdHlsZT0iY29sb3I6I2QxZDVkYiI+JiM4MjEyOzwvc3Bhbj4nCgogICAgICAgIHJvd19iZyA9ICIjZmZmIiBpZiBpICUgMiA9PSAwIGVsc2UgIiNmYWZhZmEiCiAgICAgICAgdGFibGVfcm93cyArPSAoCiAgICAgICAgICAgIGYnPHRyIHN0eWxlPSJiYWNrZ3JvdW5kOntyb3dfYmd9Ij4nCiAgICAgICAgICAgIGYnPHRkIHN0eWxlPSJwYWRkaW5nOjlweCAxMnB4O2ZvbnQtd2VpZ2h0OjYwMDtjb2xvcjojMWUyNDMzO3doaXRlLXNwYWNlOm5vd3JhcDtib3JkZXItYm90dG9tOjFweCBzb2xpZCAjZjNmNGY2Ij57YWdlbnRfbmFtZX08L3RkPicKICAgICAgICAgICAgZic8dGQgc3R5bGU9InBhZGRpbmc6OXB4IDEycHg7Ym9yZGVyLWJvdHRvbToxcHggc29saWQgI2YzZjRmNiI+JwogICAgICAgICAgICBmJzx0YWJsZSBjZWxscGFkZGluZz0iMCIgY2VsbHNwYWNpbmc9IjAiIGJvcmRlcj0iMCI+PHRyPicKICAgICAgICAgICAgZic8dGQgc3R5bGU9IndpZHRoOjYwcHg7YmFja2dyb3VuZDojZjFmNWY5O2JvcmRlci1yYWRpdXM6NHB4O292ZXJmbG93OmhpZGRlbjt2ZXJ0aWNhbC1hbGlnbjptaWRkbGUiPicKICAgICAgICAgICAgZic8ZGl2IHN0eWxlPSJiYWNrZ3JvdW5kOiMyYzVkYmQ7aGVpZ2h0OjhweDt3aWR0aDp7cGN0X3d9O2JvcmRlci1yYWRpdXM6NHB4Ij48L2Rpdj48L3RkPicKICAgICAgICAgICAgZic8dGQgc3R5bGU9InBhZGRpbmctbGVmdDo2cHg7Zm9udC1zaXplOjEycHg7Zm9udC13ZWlnaHQ6NjAwO2NvbG9yOiMxZTI0MzM7d2hpdGUtc3BhY2U6bm93cmFwIj57cGN0X3ZhbH08L3RkPicKICAgICAgICAgICAgZic8L3RyPjwvdGFibGU+PC90ZD4nCiAgICAgICAgICAgIGYnPHRkIHN0eWxlPSJwYWRkaW5nOjlweCAxMnB4O2NvbG9yOiMyMmM1NWU7Zm9udC13ZWlnaHQ6NTAwO2JvcmRlci1ib3R0b206MXB4IHNvbGlkICNmM2Y0ZjYiPntjZWxsKCIxIil9PC90ZD4nCiAgICAgICAgICAgIGYnPHRkIHN0eWxlPSJwYWRkaW5nOjlweCAxMnB4O2NvbG9yOiMzYjgyZjY7Zm9udC13ZWlnaHQ6NTAwO2JvcmRlci1ib3R0b206MXB4IHNvbGlkICNmM2Y0ZjYiPntjZWxsKCI0Iil9PC90ZD4nCiAgICAgICAgICAgIGYnPHRkIHN0eWxlPSJwYWRkaW5nOjlweCAxMnB4O2NvbG9yOiNhODU1Zjc7Zm9udC13ZWlnaHQ6NTAwO2JvcmRlci1ib3R0b206MXB4IHNvbGlkICNmM2Y0ZjYiPntjZWxsKCI1Iil9PC90ZD4nCiAgICAgICAgICAgIGYnPHRkIHN0eWxlPSJwYWRkaW5nOjlweCAxMnB4O2NvbG9yOiNmOTczMTY7Zm9udC13ZWlnaHQ6NTAwO2JvcmRlci1ib3R0b206MXB4IHNvbGlkICNmM2Y0ZjYiPntjZWxsKCIyIil9PC90ZD4nCiAgICAgICAgICAgIGYnPHRkIHN0eWxlPSJwYWRkaW5nOjlweCAxMnB4O2NvbG9yOiNlYWIzMDg7Zm9udC13ZWlnaHQ6NTAwO2JvcmRlci1ib3R0b206MXB4IHNvbGlkICNmM2Y0ZjYiPntjZWxsKCIzIil9PC90ZD4nCiAgICAgICAgICAgIGYnPHRkIHN0eWxlPSJwYWRkaW5nOjlweCAxMnB4O2NvbG9yOiMwNmI2ZDQ7Zm9udC13ZWlnaHQ6NTAwO2JvcmRlci1ib3R0b206MXB4IHNvbGlkICNmM2Y0ZjYiPntjZWxsKCI2Iil9PC90ZD4nCiAgICAgICAgICAgIGYnPHRkIHN0eWxlPSJwYWRkaW5nOjlweCAxMnB4O2NvbG9yOiM5NGEzYjg7Zm9udC13ZWlnaHQ6NTAwO2JvcmRlci1ib3R0b206MXB4IHNvbGlkICNmM2Y0ZjYiPntjZWxsKCIwIil9PC90ZD4nCiAgICAgICAgICAgIGYnPC90cj4nCiAgICAgICAgKQoKICAgIGFnZW50X2NvdW50ID0gbGVuKGFnZW50cykKICAgIGV4ZWNfc3VtbWFyeV9odG1sID0gYnVpbGRfZXhlY19zdW1tYXJ5X2h0bWwoYWdlbnRzKQoKICAgIHJldHVybiBmIiIiPCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+PG1ldGEgY2hhcnNldD0iVVRGLTgiPjx0aXRsZT5BZ2VudCBTdGF0dXMgVGltZSBSZXBvcnQgLSB7Y29tcGFueX08L3RpdGxlPjwvaGVhZD4KPGJvZHkgc3R5bGU9Im1hcmdpbjowO3BhZGRpbmc6MDtiYWNrZ3JvdW5kOiNmMGYyZjU7Zm9udC1mYW1pbHk6LWFwcGxlLXN5c3RlbSxCbGlua01hY1N5c3RlbUZvbnQsJ1NlZ29lIFVJJyxSb2JvdG8sc2Fucy1zZXJpZjtjb2xvcjojMWUyNDMzIj4KPHRhYmxlIHdpZHRoPSIxMDAlIiBjZWxscGFkZGluZz0iMCIgY2VsbHNwYWNpbmc9IjAiIGJvcmRlcj0iMCIgc3R5bGU9ImJhY2tncm91bmQ6I2YwZjJmNTtwYWRkaW5nOjE2cHgiPjx0cj48dGQ+CgogIDx0YWJsZSB3aWR0aD0iMTAwJSIgY2VsbHBhZGRpbmc9IjAiIGNlbGxzcGFjaW5nPSIwIiBib3JkZXI9IjAiIHN0eWxlPSJiYWNrZ3JvdW5kOiMxYTI3NDQ7Ym9yZGVyLXJhZGl1czoxMHB4O21hcmdpbi1ib3R0b206MTZweCI+CiAgPHRyPjx0ZCBzdHlsZT0icGFkZGluZzoyMHB4IDI4cHgiPgogICAgPGRpdiBzdHlsZT0iZm9udC1zaXplOjIwcHg7Zm9udC13ZWlnaHQ6NzAwO2NvbG9yOiNmZmZmZmYiPkFnZW50IFN0YXR1cyBUaW1lIFJlcG9ydDwvZGl2PgogICAgPGRpdiBzdHlsZT0iZm9udC1zaXplOjEzcHg7Y29sb3I6cmdiYSgyNTUsMjU1LDI1NSwwLjY1KTttYXJnaW4tdG9wOjNweCI+e2NvbXBhbnl9ICZuYnNwOyZtaWRkb3Q7Jm5ic3A7IHtkYXRlX2xhYmVsfSAmbmJzcDsmbWlkZG90OyZuYnNwOyB7YWdlbnRfY291bnR9IGFnZW50czwvZGl2PgogIDwvdGQ+PC90cj48L3RhYmxlPgoKICB7ZXhlY19zdW1tYXJ5X2h0bWx9CiAgPHRhYmxlIHdpZHRoPSIxMDAlIiBjZWxscGFkZGluZz0iMCIgY2VsbHNwYWNpbmc9IjAiIGJvcmRlcj0iMCIgc3R5bGU9Im1hcmdpbi1ib3R0b206MTZweCI+CiAgPHRyPntrcGlfY2VsbHN9PC90cj48L3RhYmxlPgoKICA8dGFibGUgd2lkdGg9IjEwMCUiIGNlbGxwYWRkaW5nPSIwIiBjZWxsc3BhY2luZz0iMCIgYm9yZGVyPSIwIiBzdHlsZT0ibWFyZ2luLWJvdHRvbToxNnB4Ij48dHI+CiAgICA8dGQgd2lkdGg9IjY4JSIgc3R5bGU9InBhZGRpbmctcmlnaHQ6OHB4O3ZlcnRpY2FsLWFsaWduOnRvcCI+CiAgICAgIDxkaXYgc3R5bGU9ImJhY2tncm91bmQ6I2ZmZjtib3JkZXItcmFkaXVzOjEwcHg7cGFkZGluZzoxNnB4IDIwcHgiPgogICAgICAgIDxpbWcgc3JjPSJkYXRhOmltYWdlL2pwZWc7YmFzZTY0LHtiYXJfYjY0fSIgYWx0PSJTdGF0dXMgcGVyIGFnZW50IiB3aWR0aD0iMTAwJSIgc3R5bGU9ImRpc3BsYXk6YmxvY2s7bWF4LXdpZHRoOjEwMCUiPgogICAgICA8L2Rpdj4KICAgIDwvdGQ+CiAgICA8dGQgd2lkdGg9IjMyJSIgc3R5bGU9InZlcnRpY2FsLWFsaWduOnRvcCI+CiAgICAgIDxkaXYgc3R5bGU9ImJhY2tncm91bmQ6I2ZmZjtib3JkZXItcmFkaXVzOjEwcHg7cGFkZGluZzoxNnB4IDIwcHgiPgogICAgICAgIDxpbWcgc3JjPSJkYXRhOmltYWdlL2pwZWc7YmFzZTY0LHtkb251dF9iNjR9IiBhbHQ9IlN0YXR1cyBkaXN0cmlidXRpb24iIHdpZHRoPSIxMDAlIiBzdHlsZT0iZGlzcGxheTpibG9jazttYXgtd2lkdGg6MTAwJSI+CiAgICAgIDwvZGl2PgogICAgPC90ZD4KICA8L3RyPjwvdGFibGU+CgogIDx0YWJsZSB3aWR0aD0iMTAwJSIgY2VsbHBhZGRpbmc9IjAiIGNlbGxzcGFjaW5nPSIwIiBib3JkZXI9IjAiIHN0eWxlPSJiYWNrZ3JvdW5kOiNmZmY7Ym9yZGVyLXJhZGl1czoxMHB4O21hcmdpbi1ib3R0b206MTZweCI+CiAgPHRyPjx0ZCBzdHlsZT0icGFkZGluZzoyMHB4IDI0cHgiPgogICAgPGRpdiBzdHlsZT0iZm9udC1zaXplOjE0cHg7Zm9udC13ZWlnaHQ6NjAwO21hcmdpbi1ib3R0b206MTRweDtjb2xvcjojMWUyNDMzIj5BZ2VudCBTdGF0dXMgQnJlYWtkb3duIC0ge2RhdGVfbGFiZWx9PC9kaXY+CiAgICA8dGFibGUgd2lkdGg9IjEwMCUiIGNlbGxwYWRkaW5nPSIwIiBjZWxsc3BhY2luZz0iMCIgYm9yZGVyPSIwIiBzdHlsZT0iZm9udC1zaXplOjEzcHg7Ym9yZGVyLWNvbGxhcHNlOmNvbGxhcHNlIj4KICAgICAgPHRoZWFkPjx0ciBzdHlsZT0iYm9yZGVyLWJvdHRvbToycHggc29saWQgI2U1ZTdlYiI+CiAgICAgICAgPHRoIHN0eWxlPSJ0ZXh0LWFsaWduOmxlZnQ7cGFkZGluZzo5cHggMTJweDtmb250LXNpemU6MTFweDtjb2xvcjojNmI3MjgwO3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZTtsZXR0ZXItc3BhY2luZzouNXB4O3doaXRlLXNwYWNlOm5vd3JhcDtmb250LXdlaWdodDo2MDAiPkFnZW50PC90aD4KICAgICAgICA8dGggc3R5bGU9InRleHQtYWxpZ246bGVmdDtwYWRkaW5nOjlweCAxMnB4O2ZvbnQtc2l6ZToxMXB4O2NvbG9yOiM2YjcyODA7dGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlO2xldHRlci1zcGFjaW5nOi41cHg7Zm9udC13ZWlnaHQ6NjAwIj5BY3RpdmUgJTwvdGg+CiAgICAgICAgPHRoIHN0eWxlPSJ0ZXh0LWFsaWduOmxlZnQ7cGFkZGluZzo5cHggMTJweDtmb250LXNpemU6MTFweDtjb2xvcjojMjJjNTVlO3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZTtsZXR0ZXItc3BhY2luZzouNXB4O2ZvbnQtd2VpZ2h0OjYwMCI+QXZhaWxhYmxlPC90aD4KICAgICAgICA8dGggc3R5bGU9InRleHQtYWxpZ246bGVmdDtwYWRkaW5nOjlweCAxMnB4O2ZvbnQtc2l6ZToxMXB4O2NvbG9yOiMzYjgyZjY7dGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlO2xldHRlci1zcGFjaW5nOi41cHg7Zm9udC13ZWlnaHQ6NjAwIj5PbiBDYWxsPC90aD4KICAgICAgICA8dGggc3R5bGU9InRleHQtYWxpZ246bGVmdDtwYWRkaW5nOjlweCAxMnB4O2ZvbnQtc2l6ZToxMXB4O2NvbG9yOiNhODU1Zjc7dGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlO2xldHRlci1zcGFjaW5nOi41cHg7Zm9udC13ZWlnaHQ6NjAwIj5XcmFwLVVwPC90aD4KICAgICAgICA8dGggc3R5bGU9InRleHQtYWxpZ246bGVmdDtwYWRkaW5nOjlweCAxMnB4O2ZvbnQtc2l6ZToxMXB4O2NvbG9yOiNmOTczMTY7dGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlO2xldHRlci1zcGFjaW5nOi41cHg7Zm9udC13ZWlnaHQ6NjAwIj5CdXN5PC90aD4KICAgICAgICA8dGggc3R5bGU9InRleHQtYWxpZ246bGVmdDtwYWRkaW5nOjlweCAxMnB4O2ZvbnQtc2l6ZToxMXB4O2NvbG9yOiNlYWIzMDg7dGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlO2xldHRlci1zcGFjaW5nOi41cHg7Zm9udC13ZWlnaHQ6NjAwIj5PbiBCcmVhazwvdGg+CiAgICAgICAgPHRoIHN0eWxlPSJ0ZXh0LWFsaWduOmxlZnQ7cGFkZGluZzo5cHggMTJweDtmb250LXNpemU6MTFweDtjb2xvcjojMDZiNmQ0O3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZTtsZXR0ZXItc3BhY2luZzouNXB4O2ZvbnQtd2VpZ2h0OjYwMCI+UmluZ2luZzwvdGg+CiAgICAgICAgPHRoIHN0eWxlPSJ0ZXh0LWFsaWduOmxlZnQ7cGFkZGluZzo5cHggMTJweDtmb250LXNpemU6MTFweDtjb2xvcjojOTRhM2I4O3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZTtsZXR0ZXItc3BhY2luZzouNXB4O2ZvbnQtd2VpZ2h0OjYwMCI+T2ZmbGluZTwvdGg+CiAgICAgIDwvdHI+PC90aGVhZD4KICAgICAgPHRib2R5Pnt0YWJsZV9yb3dzfTwvdGJvZHk+CiAgICA8L3RhYmxlPgogIDwvdGQ+PC90cj48L3RhYmxlPgoKICA8ZGl2IHN0eWxlPSJ0ZXh0LWFsaWduOmNlbnRlcjtmb250LXNpemU6MTJweDtjb2xvcjojNmI3MjgwO3BhZGRpbmc6OHB4IDAiPgogICAge2RhdGVfbGFiZWx9ICZuYnNwOyZtaWRkb3Q7Jm5ic3A7IHtjb21wYW55fSAoSUQge2NvbXBhbnlfaWR9KSAmbmJzcDsmbWlkZG90OyZuYnNwOyBTb3VyY2U6IEFsb3dhcmUgYWdlbnRfYXVkaXRzCiAgPC9kaXY+Cgo8L3RkPjwvdHI+PC90YWJsZT4KPC9ib2R5PjwvaHRtbD4KIiIiCgoKZGVmIG1haW4oKToKICAgIHBhcnNlciA9IGFyZ3BhcnNlLkFyZ3VtZW50UGFyc2VyKGRlc2NyaXB0aW9uPSJCdWlsZCBlbWFpbC1zYWZlIEFnZW50IFN0YXR1cyBSZXBvcnQgSFRNTCIpCiAgICBwYXJzZXIuYWRkX2FyZ3VtZW50KCItLWlucHV0IiwgICAgICBkZWZhdWx0PU5vbmUpCiAgICBwYXJzZXIuYWRkX2FyZ3VtZW50KCItLXJvd3MiLCAgICAgICBkZWZhdWx0PU5vbmUpCiAgICBwYXJzZXIuYWRkX2FyZ3VtZW50KCItLWNvbXBhbnkiLCAgICBkZWZhdWx0PU5vbmUpCiAgICBwYXJzZXIuYWRkX2FyZ3VtZW50KCItLXN0YXJ0LWRhdGUiLCBkZWZhdWx0PU5vbmUpCiAgICBwYXJzZXIuYWRkX2FyZ3VtZW50KCItLWVuZC1kYXRlIiwgICBkZWZhdWx0PU5vbmUpCiAgICBwYXJzZXIuYWRkX2FyZ3VtZW50KCItLWNvbXBhbnktaWQiLCB0eXBlPWludCwgZGVmYXVsdD0wKQogICAgcGFyc2VyLmFkZF9hcmd1bWVudCgiLS1vdXQiLCAgICAgICAgcmVxdWlyZWQ9VHJ1ZSkKICAgIGFyZ3MgPSBwYXJzZXIucGFyc2VfYXJncygpCgogICAgaWYgYXJncy5pbnB1dDoKICAgICAgICB3aXRoIG9wZW4oYXJncy5pbnB1dCkgYXMgZjoKICAgICAgICAgICAgY29udHJhY3QgPSBqc29uLmxvYWQoZikKICAgICAgICBtZXRhICAgICAgID0gY29udHJhY3QuZ2V0KCJtZXRhIiwge30pCiAgICAgICAgcm93cyAgICAgICA9IGNvbnRyYWN0LmdldCgicm93cyIsIFtdKQogICAgICAgIGNvbXBhbnkgICAgPSBtZXRhLmdldCgiY29tcGFueV9uYW1lIiwgIlVua25vd24gQ29tcGFueSIpCiAgICAgICAgY29tcGFueV9pZCA9IG1ldGEuZ2V0KCJjb21wYW55X2lkIiwgMCkKICAgICAgICBkciAgICAgICAgID0gbWV0YS5nZXQoImRhdGVfcmFuZ2UiLCB7fSkKICAgICAgICBzdGFydF9kYXRlID0gZHIuZ2V0KCJzdGFydCIsICIiKQogICAgICAgIGVuZF9kYXRlICAgPSBkci5nZXQoImVuZCIsIHN0YXJ0X2RhdGUpCiAgICBlbHNlOgogICAgICAgIGlmIG5vdCBhcmdzLnJvd3Mgb3Igbm90IGFyZ3MuY29tcGFueSBvciBub3QgYXJncy5zdGFydF9kYXRlOgogICAgICAgICAgICBwcmludCgiRVJST1I6IG11c3QgcHJvdmlkZSAtLWlucHV0IG9yICgtLXJvd3MgKyAtLWNvbXBhbnkgKyAtLXN0YXJ0LWRhdGUpIiwgZmlsZT1zeXMuc3RkZXJyKQogICAgICAgICAgICBzeXMuZXhpdCgxKQogICAgICAgIHJvd3MgICAgICAgPSBqc29uLmxvYWRzKGFyZ3Mucm93cykKICAgICAgICBjb21wYW55ICAgID0gYXJncy5jb21wYW55CiAgICAgICAgY29tcGFueV9pZCA9IGFyZ3MuY29tcGFueV9pZAogICAgICAgIHN0YXJ0X2RhdGUgPSBhcmdzLnN0YXJ0X2RhdGUKICAgICAgICBlbmRfZGF0ZSAgID0gYXJncy5lbmRfZGF0ZSBvciBhcmdzLnN0YXJ0X2RhdGUKCiAgICBkYXRlX2xhYmVsID0gZm9ybWF0X2RhdGVfbGFiZWwoc3RhcnRfZGF0ZSwgZW5kX2RhdGUpCiAgICBhZ2VudHMgICAgID0gYWdncmVnYXRlX3Jvd3Mocm93cykKCiAgICBpZiBub3QgYWdlbnRzOgogICAgICAgIHByaW50KCJObyBhZ2VudCBkYXRhIGZvdW5kIC0gYWJvcnRpbmcuIiwgZmlsZT1zeXMuc3RkZXJyKQogICAgICAgIHN5cy5leGl0KDEpCgogICAgcHJpbnQoZiJSZW5kZXJpbmcgY2hhcnRzIGZvciB7bGVuKGFnZW50cyl9IGFnZW50cy4uLiIpCiAgICBiYXJfYjY0ICAgPSBtYWtlX3N0YWNrZWRfYmFyKGFnZW50cykKICAgIGRvbnV0X2I2NCA9IG1ha2VfZG9udXQoYWdlbnRzKQoKICAgIGh0bWwgPSBidWlsZF9lbWFpbF9odG1sKGFnZW50cywgY29tcGFueSwgZGF0ZV9sYWJlbCwgY29tcGFueV9pZCwgYmFyX2I2NCwgZG9udXRfYjY0KQoKICAgIHdpdGggb3BlbihhcmdzLm91dCwgInciLCBlbmNvZGluZz0idXRmLTgiKSBhcyBmOgogICAgICAgIGYud3JpdGUoaHRtbCkKICAgIHByaW50KGYiRW1haWwgSFRNTCB3cml0dGVuIHRvOiB7YXJncy5vdXR9IikKCgppZiBfX25hbWVfXyA9PSAiX19tYWluX18iOgogICAgbWFpbigpCg==
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+build_email.py — Generate a deterministic Agent Status Time Report HTML file.
+
+Produces a self-contained HTML dashboard with Chart.js charts rendered client-side.
+The output is identical for the same input data on every run — no matplotlib, no
+PIL, no non-deterministic image encoding.
+
+Supports two input modes:
+  --input  path/to/report_data.json   (data contract mode — preferred)
+  --rows   '[{...}]' + --company + --start-date   (legacy CLI mode)
+
+Data contract JSON schema:
+  {
+    "meta": {
+      "company_name": "Debt Freedom USA",
+      "company_id": 6364,
+      "date_range": {"start": "2026-04-13", "end": "2026-04-13"}
+    },
+    "rows": [
+      {"agent_name": "Ana Cruz", "status_code": "1", "total_seconds": 8435},
+      ...
+    ]
+  }
+
+Each row must have: agent_name (str), status_code (str "0"-"6"), total_seconds (int).
+"""
+
+import argparse
+import json
+import sys
+from collections import defaultdict
+from datetime import datetime
+
+
+# ── Data helpers ──────────────────────────────────────────────────────────────
+
+def rows_to_raw_js(rows: list) -> str:
+    """Convert query rows to the RAW JavaScript array string.
+
+    Sums total_seconds across all rows for the same (agent_name, status_code)
+    pair so multi-day ranges and multi-batch accumulation aggregate correctly.
+    Filters out any non-numeric status codes (legacy values like "offline").
+    """
+    valid_codes = {"0", "1", "2", "3", "4", "5", "6"}
+    agents: dict = defaultdict(lambda: {"0": 0, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0})
+    for row in rows:
+        name = row.get("agent_name", "Unknown")
+        code = str(row.get("status_code", "0"))
+        if code not in valid_codes:
+            continue
+        secs = int(row.get("total_seconds", 0) or 0)
+        agents[name][code] += secs
+
+    items = []
+    for agent in sorted(agents.keys()):
+        s = agents[agent]
+        s_js = ", ".join(f'"{k}": {v}' for k, v in sorted(s.items()))
+        items.append(f'  {{agent: "{agent}", s: {{{s_js}}}}}')
+    return "[\n" + ",\n".join(items) + "\n]"
+
+
+def format_date_label(start_str: str, end_str: str = None) -> str:
+    """Format a date or date range as a human-readable label."""
+    try:
+        start = datetime.strptime(start_str, "%Y-%m-%d")
+        if not end_str or end_str == start_str:
+            return start.strftime("%B %-d, %Y")
+        end = datetime.strptime(end_str, "%Y-%m-%d")
+        if start.year != end.year:
+            return f"{start.strftime('%B %-d, %Y')} – {end.strftime('%B %-d, %Y')}"
+        if start.month != end.month:
+            return f"{start.strftime('%B %-d')} – {end.strftime('%B %-d, %Y')}"
+        return f"{start.strftime('%B %-d')}–{end.strftime('%-d, %Y')}"
+    except Exception:
+        return end_str or start_str
+
+
+# ── HTML Template (embedded) ─────────────────────────────────────────────────
+# This is the canonical template. It uses Chart.js for client-side rendering,
+# making the output fully deterministic — same input always produces same HTML.
+
+HTML_TEMPLATE = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Status Time Report – {{COMPANY_NAME}}</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #f0f2f5; --card: #ffffff; --header: #1a2744; --accent: #2c5dbd;
+      --text: #1e2433; --muted: #6b7280; --border: #e5e7eb; --gap: 16px; --radius: 10px;
+      --available: #22c55e; --busy: #f97316; --on-break: #eab308;
+      --on-call: #3b82f6; --wrap-up: #a855f7; --offline: #94a3b8; --ringing: #06b6d4;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:var(--bg); color:var(--text); }
+    .wrap { max-width:1400px; margin:0 auto; padding:var(--gap); }
+    .header { background:var(--header); color:#fff; border-radius:var(--radius); padding:20px 28px; margin-bottom:var(--gap); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+    .header-left h1 { font-size:20px; font-weight:700; }
+    .header-left p  { font-size:13px; color:rgba(255,255,255,.65); margin-top:3px; }
+    .header-right   { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .filter-group   { display:flex; flex-direction:column; gap:3px; }
+    .filter-group label { font-size:11px; color:rgba(255,255,255,.6); text-transform:uppercase; letter-spacing:.5px; }
+    .filter-group select { padding:6px 10px; border-radius:6px; background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.25); font-size:13px; cursor:pointer; }
+    .filter-group select option { background:#1a2744; }
+    .legend-bar { background:var(--card); border-radius:var(--radius); padding:12px 20px; margin-bottom:var(--gap); display:flex; gap:20px; flex-wrap:wrap; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,.07); }
+    .legend-bar span { font-size:12px; color:var(--muted); font-weight:600; margin-right:4px; }
+    .legend-item { display:flex; align-items:center; gap:6px; font-size:13px; }
+    .legend-dot  { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+    .kpi-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:var(--gap); margin-bottom:var(--gap); }
+    .kpi-card { background:var(--card); border-radius:var(--radius); padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,.07); border-top:3px solid transparent; }
+    .kpi-card.available { border-color:var(--available); } .kpi-card.on-call { border-color:var(--on-call); }
+    .kpi-card.busy { border-color:var(--busy); } .kpi-card.on-break { border-color:var(--on-break); }
+    .kpi-card.wrap-up { border-color:var(--wrap-up); } .kpi-card.offline { border-color:var(--offline); }
+    .kpi-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .kpi-value { font-size:26px; font-weight:700; }
+    .kpi-sub   { font-size:12px; color:var(--muted); margin-top:2px; }
+    .chart-row { display:grid; grid-template-columns:2fr 1fr; gap:var(--gap); margin-bottom:var(--gap); }
+    .chart-card { background:var(--card); border-radius:var(--radius); padding:20px 24px; box-shadow:0 1px 3px rgba(0,0,0,.07); }
+    .chart-card h3 { font-size:14px; font-weight:600; margin-bottom:16px; }
+    #stackedChart { max-height:780px; } #donutChart { max-height:340px; }
+    .table-card { background:var(--card); border-radius:var(--radius); padding:20px 24px; box-shadow:0 1px 3px rgba(0,0,0,.07); overflow-x:auto; }
+    .table-card h3 { font-size:14px; font-weight:600; margin-bottom:14px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    thead th { text-align:left; padding:9px 12px; border-bottom:2px solid var(--border); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.5px; cursor:pointer; white-space:nowrap; user-select:none; }
+    thead th:hover { color:var(--text); }
+    tbody td { padding:9px 12px; border-bottom:1px solid #f3f4f6; }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:hover { background:#f9fafb; }
+    .bar-bg   { background:#f1f5f9; border-radius:4px; height:8px; min-width:60px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:4px; }
+    footer { text-align:center; font-size:12px; color:var(--muted); padding:16px 0 8px; }
+    @media(max-width:900px) { .chart-row { grid-template-columns:1fr; } }
+    @media(max-width:600px) { .kpi-row  { grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>Agent Status Time Report</h1>
+      <p id="subtitle">{{COMPANY_NAME}} · {{REPORT_DATE_LABEL}}</p>
+    </div>
+    <div class="header-right">
+      <div class="filter-group">
+        <label>Agent</label>
+        <select id="agentFilter" onchange="applyFilter()">
+          <option value="all">All Agents</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend-bar">
+    <span>Status Key:</span>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--available)"></div> Available</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--on-call)"></div> On Call</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--wrap-up)"></div> Wrap-Up</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--busy)"></div> Busy</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--on-break)"></div> On Break</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--ringing)"></div> Ringing</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--offline)"></div> Offline</div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card available"><div class="kpi-label">Available</div><div class="kpi-value" id="kpi-1">—</div><div class="kpi-sub" id="kpi-1-pct"></div></div>
+    <div class="kpi-card on-call">  <div class="kpi-label">On Call</div>  <div class="kpi-value" id="kpi-4">—</div><div class="kpi-sub" id="kpi-4-pct"></div></div>
+    <div class="kpi-card wrap-up">  <div class="kpi-label">Wrap-Up</div>  <div class="kpi-value" id="kpi-5">—</div><div class="kpi-sub" id="kpi-5-pct"></div></div>
+    <div class="kpi-card busy">     <div class="kpi-label">Busy</div>      <div class="kpi-value" id="kpi-2">—</div><div class="kpi-sub" id="kpi-2-pct"></div></div>
+    <div class="kpi-card on-break"> <div class="kpi-label">On Break</div>  <div class="kpi-value" id="kpi-3">—</div><div class="kpi-sub" id="kpi-3-pct"></div></div>
+    <div class="kpi-card offline">  <div class="kpi-label">Offline</div>   <div class="kpi-value" id="kpi-0">—</div><div class="kpi-sub" id="kpi-0-pct"></div></div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>Time in Each Status per Agent (hours) — sorted by On Call + Available</h3>
+      <canvas id="stackedChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Team-Wide Status Distribution</h3>
+      <canvas id="donutChart"></canvas>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <h3 id="tableTitle">Agent Status Breakdown — {{REPORT_DATE_LABEL}}</h3>
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortTable('agent')">Agent ↕</th>
+          <th onclick="sortTable('active_pct')">Active % ↕</th>
+          <th onclick="sortTable('s1')" style="color:var(--available)">Available ↕</th>
+          <th onclick="sortTable('s4')" style="color:var(--on-call)">On Call ↕</th>
+          <th onclick="sortTable('s5')" style="color:var(--wrap-up)">Wrap-Up ↕</th>
+          <th onclick="sortTable('s2')" style="color:var(--busy)">Busy ↕</th>
+          <th onclick="sortTable('s3')" style="color:var(--on-break)">On Break ↕</th>
+          <th onclick="sortTable('s6')" style="color:var(--ringing)">Ringing ↕</th>
+          <th onclick="sortTable('s0')" style="color:var(--offline)">Offline ↕</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <footer>Data for {{REPORT_DATE_LABEL}} · {{COMPANY_NAME}} (ID {{COMPANY_ID}}) · Source: Aloware agent_audits · Method: LEAD() timestamp diff; trailing offline after last logout excluded</footer>
+</div>
+
+<script>
+const RAW = {{RAW_DATA_JS}};
+
+const STATUS_LABELS = {"0":"Offline","1":"Available","2":"Busy","3":"On Break","4":"On Call","5":"Wrap-Up","6":"Ringing"};
+const STATUS_COLORS = {"0":"#94a3b8","1":"#22c55e","2":"#f97316","3":"#eab308","4":"#3b82f6","5":"#a855f7","6":"#06b6d4"};
+const COMPANY_NAME  = "{{COMPANY_NAME}}";
+const REPORT_DATE   = "{{REPORT_DATE_LABEL}}";
+
+function fmtHMS(secs) {
+  if (!secs) return '—';
+  const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60), s = secs%60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+function toHrs(secs) { return (secs/3600).toFixed(2); }
+
+let activeAgent = 'all';
+let stackedChart, donutChart;
+
+window.addEventListener('DOMContentLoaded', () => { populateFilter(); render(); });
+
+function populateFilter() {
+  const sel = document.getElementById('agentFilter');
+  [...RAW].sort((a,b)=>a.agent.localeCompare(b.agent)).forEach(r => {
+    const o = document.createElement('option'); o.value = r.agent; o.textContent = r.agent; sel.appendChild(o);
+  });
+}
+function applyFilter() { activeAgent = document.getElementById('agentFilter').value; render(); }
+function filteredData() { return activeAgent === 'all' ? RAW : RAW.filter(r => r.agent === activeAgent); }
+
+function totals(data) {
+  const t = {"0":0,"1":0,"2":0,"3":0,"4":0,"5":0,"6":0};
+  data.forEach(r => Object.keys(r.s).forEach(k => t[k] += (r.s[k]||0)));
+  return t;
+}
+
+function render() {
+  const data = filteredData();
+  updateSubtitle(data);
+  updateKPIs(data);
+  updateStacked(data);
+  updateDonut(data);
+  renderTable(data);
+}
+
+function updateSubtitle(data) {
+  const lbl = activeAgent === 'all' ? `${data.length} agents · ${REPORT_DATE}` : `${activeAgent} · ${REPORT_DATE}`;
+  document.getElementById('subtitle').textContent = `${COMPANY_NAME}  ·  ${lbl}`;
+}
+
+function updateKPIs(data) {
+  const t = totals(data);
+  const grand = Object.values(t).reduce((a,b)=>a+b,0);
+  const pct = v => grand ? ((v/grand)*100).toFixed(1)+'%' : '—';
+  ["0","1","2","3","4","5"].forEach(k => {
+    document.getElementById(`kpi-${k}`).textContent = fmtHMS(t[k]);
+    document.getElementById(`kpi-${k}-pct`).textContent = `${pct(t[k])} of total`;
+  });
+}
+
+function updateStacked(data) {
+  const active = [...data].sort((a,b) => (b.s["4"]+b.s["1"]) - (a.s["4"]+a.s["1"]));
+  const labels = active.map(r => r.agent);
+  const order = ["1","4","5","2","3","6","0"];
+  const datasets = order.map(sc => ({
+    label: STATUS_LABELS[sc],
+    data: active.map(r => parseFloat(toHrs(r.s[sc]||0))),
+    backgroundColor: STATUS_COLORS[sc] + 'dd',
+    borderColor: STATUS_COLORS[sc],
+    borderWidth: 0.5,
+    borderRadius: 2,
+  }));
+  const ctx = document.getElementById('stackedChart').getContext('2d');
+  if (stackedChart) {
+    stackedChart.data.labels = labels;
+    stackedChart.data.datasets = datasets;
+    stackedChart.update('none');
+  } else {
+    stackedChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtHMS(Math.round(ctx.parsed.x*3600))}` } }
+        },
+        scales: {
+          x: { stacked: true, ticks: { callback: v => `${v}h` }, grid: { color:'#f0f0f0' } },
+          y: { stacked: true, ticks: { font: { size:12 } }, grid: { display:false } }
+        }
+      }
+    });
+  }
+}
+
+function updateDonut(data) {
+  const t = totals(data);
+  const order = ["1","4","5","2","3","6","0"];
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  if (donutChart) {
+    donutChart.data.datasets[0].data = order.map(k=>t[k]);
+    donutChart.update('none');
+  } else {
+    donutChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: order.map(k=>STATUS_LABELS[k]),
+        datasets: [{ data: order.map(k=>t[k]), backgroundColor: order.map(k=>STATUS_COLORS[k]+'ee'), borderColor:'#fff', borderWidth:2 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout:'58%',
+        plugins: {
+          legend: { position:'bottom', labels:{ usePointStyle:true, padding:14, font:{size:12} } },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+                const pct = total ? ((ctx.parsed/total)*100).toFixed(1) : 0;
+                return ` ${ctx.label}: ${fmtHMS(ctx.parsed)} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+let _sortKey = 's4', _sortDir = -1;
+function sortTable(key) {
+  if (_sortKey === key) _sortDir *= -1; else { _sortKey = key; _sortDir = -1; }
+  renderTable(filteredData());
+}
+
+function renderTable(data) {
+  const getV = (r, k) => {
+    if (k === 'agent') return r.agent;
+    if (k === 'active_pct') {
+      const act = Object.entries(r.s).filter(([c])=>c!=="0").reduce((a,[,v])=>a+v,0);
+      const tot = act + (r.s["0"]||0);
+      return tot ? act/tot : 0;
+    }
+    return r.s[k.replace('s','')]||0;
+  };
+  const sorted = [...data].sort((a,b) => {
+    const av = getV(a,_sortKey), bv = getV(b,_sortKey);
+    return typeof av==='string' ? _sortDir*av.localeCompare(bv) : _sortDir*(bv-av);
+  });
+  document.getElementById('tableBody').innerHTML = sorted.map(r => {
+    const act = Object.entries(r.s).filter(([c])=>c!=="0").reduce((a,[,v])=>a+v,0);
+    const tot = act + (r.s["0"]||0);
+    const pct = tot ? ((act/tot)*100).toFixed(1) : '0.0';
+    const cell = (k) => r.s[k] ? fmtHMS(r.s[k]) : '<span style="color:#d1d5db">—</span>';
+    return `<tr>
+      <td><strong>${r.agent}</strong></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="bar-bg" style="width:60px"><div class="bar-fill" style="width:${pct}%;background:var(--accent)"></div></div>
+          <span style="font-size:12px;font-weight:600">${pct}%</span>
+        </div>
+      </td>
+      <td>${cell("1")}</td>
+      <td>${cell("4")}</td>
+      <td>${cell("5")}</td>
+      <td>${cell("2")}</td>
+      <td>${cell("3")}</td>
+      <td>${cell("6")}</td>
+      <td>${cell("0")}</td>
+    </tr>`;
+  }).join('');
+}
+</script>
+</body>
+</html>"""
+
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+def build_report(rows, company, start_date, end_date, company_id, out_path):
+    """Build the HTML report from rows and write to out_path."""
+    raw_js = rows_to_raw_js(rows)
+    date_label = format_date_label(start_date, end_date)
+
+    html = (HTML_TEMPLATE
+            .replace("{{COMPANY_NAME}}", company)
+            .replace("{{REPORT_DATE_LABEL}}", date_label)
+            .replace("{{COMPANY_ID}}", str(company_id))
+            .replace("{{RAW_DATA_JS}}", raw_js))
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    # Count agents for confirmation
+    valid_codes = {"0", "1", "2", "3", "4", "5", "6"}
+    agents = set()
+    for row in rows:
+        code = str(row.get("status_code", "0"))
+        if code in valid_codes:
+            agents.add(row.get("agent_name", "Unknown"))
+
+    print(f"Report written to: {out_path} ({len(agents)} agents, {len(rows)} rows)")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Build Agent Status Time Report HTML")
+    parser.add_argument("--input",      default=None, help="Path to data contract JSON file")
+    parser.add_argument("--rows",       default=None, help="JSON array of query result rows (legacy mode)")
+    parser.add_argument("--company",    default=None, help="Company name (legacy mode)")
+    parser.add_argument("--start-date", default=None, help="Report start date YYYY-MM-DD")
+    parser.add_argument("--end-date",   default=None, help="Report end date YYYY-MM-DD (defaults to start-date)")
+    parser.add_argument("--company-id", type=int, default=0, help="Aloware company ID")
+    parser.add_argument("--out",        required=True, help="Output HTML file path")
+    args = parser.parse_args()
+
+    if args.input:
+        # Data contract mode
+        with open(args.input) as f:
+            contract = json.load(f)
+        meta       = contract.get("meta", {})
+        rows       = contract.get("rows", [])
+        company    = meta.get("company_name", "Unknown Company")
+        company_id = meta.get("company_id", 0)
+        dr         = meta.get("date_range", {})
+        start_date = dr.get("start", "")
+        end_date   = dr.get("end", start_date)
+    else:
+        # Legacy CLI mode
+        if not args.rows or not args.company or not args.start_date:
+            print("ERROR: must provide --input or (--rows + --company + --start-date)", file=sys.stderr)
+            sys.exit(1)
+        rows       = json.loads(args.rows)
+        company    = args.company
+        company_id = args.company_id
+        start_date = args.start_date
+        end_date   = args.end_date or args.start_date
+
+    if not rows:
+        print("No rows provided — aborting.", file=sys.stderr)
+        sys.exit(1)
+
+    build_report(rows, company, start_date, end_date, company_id, args.out)
+
+
+if __name__ == "__main__":
+    main()
