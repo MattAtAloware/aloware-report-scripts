@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-build_email.py - Generate a fully static, email-safe HTML report with embedded chart images.
+build_email.py - Generate a fully static, email-safe HTML report with chart images.
+
+Supports two chart modes:
+  1. Inline base64 (default) — charts embedded directly in HTML. Large files (~60-140KB).
+  2. External URLs (--chart-dir) — charts saved as separate .jpg files, HTML uses
+     {{BAR_CHART_URL}} and {{DONUT_CHART_URL}} placeholders for the caller to replace
+     with hosted URLs. HTML is ~10-15KB.
+
 Reconstructed from source. Supports --rows (legacy) and --input (data contract) modes.
 """
 
@@ -96,7 +103,22 @@ def to_base64_jpeg(fig, quality: int = 55) -> str:
     return base64.b64encode(buf_jpg.read()).decode("utf-8")
 
 
-def make_stacked_bar(agents: dict) -> str:
+def to_jpeg_bytes(fig, quality: int = 55) -> bytes:
+    """Render figure to JPEG bytes (for file-based chart output)."""
+    from PIL import Image
+    buf_png = io.BytesIO()
+    fig.savefig(buf_png, format="png", dpi=72, bbox_inches="tight",
+                facecolor=fig.get_facecolor())
+    buf_png.seek(0)
+    img = Image.open(buf_png).convert("RGB")
+    buf_jpg = io.BytesIO()
+    img.save(buf_jpg, format="JPEG", quality=quality, optimize=True)
+    buf_jpg.seek(0)
+    return buf_jpg.read()
+
+
+def make_stacked_bar(agents: dict):
+    """Returns fig for the stacked bar chart. Caller decides output format."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -140,12 +162,11 @@ def make_stacked_bar(agents: dict) -> str:
     ax.legend(handles=handles, loc="lower right", fontsize=8, framealpha=0.9, ncol=4)
 
     fig.tight_layout()
-    b64 = to_base64_jpeg(fig)
-    plt.close(fig)
-    return b64
+    return fig
 
 
-def make_donut(agents: dict) -> str:
+def make_donut(agents: dict):
+    """Returns fig for the donut chart. Caller decides output format."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -175,9 +196,7 @@ def make_donut(agents: dict) -> str:
               bbox_to_anchor=(0.5, -0.08), ncol=2, framealpha=0.9)
 
     fig.tight_layout()
-    b64 = to_base64_jpeg(fig)
-    plt.close(fig)
-    return b64
+    return fig
 
 
 def compute_kpis(agents: dict) -> dict:
@@ -196,8 +215,6 @@ def build_exec_summary_html(agents: dict) -> str:
     util_pct = (total_active / total_all * 100) if total_all else 0.0
 
     # Sort by active% DESC, then total active seconds DESC as tiebreaker.
-    # Without the tiebreaker, agents with equal active% (e.g. multiple 100% agents)
-    # are ordered by dict insertion, which picks the wrong "top performer".
     ranked = sorted(
         agents.items(),
         key=lambda kv: (
@@ -287,7 +304,13 @@ def build_exec_summary_html(agents: dict) -> str:
     )
 
 
-def build_email_html(agents, company, date_label, company_id, bar_b64, donut_b64):
+def build_email_html(agents, company, date_label, company_id, bar_src, donut_src):
+    """Build the full email HTML.
+
+    bar_src / donut_src can be:
+      - A base64 data URI string (inline mode)
+      - A placeholder URL like "{{BAR_CHART_URL}}" (external mode)
+    """
     kpis = compute_kpis(agents)
 
     sorted_agents = sorted(
@@ -368,12 +391,12 @@ def build_email_html(agents, company, date_label, company_id, bar_b64, donut_b64
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px"><tr>
     <td width="68%" style="padding-right:8px;vertical-align:top">
       <div style="background:#fff;border-radius:10px;padding:16px 20px">
-        <img src="data:image/jpeg;base64,{bar_b64}" alt="Status per agent" width="100%" style="display:block;max-width:100%">
+        <img src="{bar_src}" alt="Status per agent" width="100%" style="display:block;max-width:100%">
       </div>
     </td>
     <td width="32%" style="vertical-align:top">
       <div style="background:#fff;border-radius:10px;padding:16px 20px">
-        <img src="data:image/jpeg;base64,{donut_b64}" alt="Status distribution" width="100%" style="display:block;max-width:100%">
+        <img src="{donut_src}" alt="Status distribution" width="100%" style="display:block;max-width:100%">
       </div>
     </td>
   </tr></table>
@@ -415,6 +438,10 @@ def main():
     parser.add_argument("--end-date",   default=None)
     parser.add_argument("--company-id", type=int, default=0)
     parser.add_argument("--out",        required=True)
+    parser.add_argument("--chart-dir",  default=None,
+                        help="Directory to save chart images as separate files. "
+                             "When set, HTML uses {{BAR_CHART_URL}} and {{DONUT_CHART_URL}} "
+                             "placeholders instead of inline base64.")
     args = parser.parse_args()
 
     if args.input:
@@ -445,10 +472,42 @@ def main():
         sys.exit(1)
 
     print(f"Rendering charts for {len(agents)} agents...")
-    bar_b64   = make_stacked_bar(agents)
-    donut_b64 = make_donut(agents)
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
 
-    html = build_email_html(agents, company, date_label, company_id, bar_b64, donut_b64)
+    bar_fig   = make_stacked_bar(agents)
+    donut_fig = make_donut(agents)
+
+    if args.chart_dir:
+        # External mode: save charts as files, use placeholders in HTML
+        import os
+        os.makedirs(args.chart_dir, exist_ok=True)
+
+        bar_path   = os.path.join(args.chart_dir, "bar_chart.jpg")
+        donut_path = os.path.join(args.chart_dir, "donut_chart.jpg")
+
+        bar_bytes   = to_jpeg_bytes(bar_fig)
+        donut_bytes = to_jpeg_bytes(donut_fig)
+
+        with open(bar_path, "wb") as f:
+            f.write(bar_bytes)
+        with open(donut_path, "wb") as f:
+            f.write(donut_bytes)
+
+        print(f"Charts saved: {bar_path} ({len(bar_bytes):,} bytes), {donut_path} ({len(donut_bytes):,} bytes)")
+
+        bar_src   = "{{BAR_CHART_URL}}"
+        donut_src = "{{DONUT_CHART_URL}}"
+    else:
+        # Inline mode: embed base64 directly (legacy behavior)
+        bar_src   = f"data:image/jpeg;base64,{to_base64_jpeg(bar_fig)}"
+        donut_src = f"data:image/jpeg;base64,{to_base64_jpeg(donut_fig)}"
+
+    plt.close(bar_fig)
+    plt.close(donut_fig)
+
+    html = build_email_html(agents, company, date_label, company_id, bar_src, donut_src)
 
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(html)
