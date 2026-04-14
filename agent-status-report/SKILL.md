@@ -16,35 +16,24 @@ description: >
 
 ## Architecture
 
-**Claude-orchestrates, Python-owns-SQL** pattern.
+Follows the **Claude-orchestrates, Python-renders** pattern from `MattAtAloware/cowork-skill-template`.
 
-The SQL, batching logic, and data contract format all live in `query_report.py` —
-not in this skill. Claude never writes or interprets SQL. It fetches the scripts,
-runs them with parameters, and delivers the output.
+1. Fetch renderer script from GitHub (Step 0 — before any data queries)
+2. Gather data via Metabase (Steps 1–2)
+3. Write data contract JSON (Step 3)
+4. Run renderer → output HTML (Step 4)
+5. Deliver via Gmail MCP (Step 5)
 
-**Pipeline:**
+**Claude never generates report HTML directly.** The renderer is the source of truth.
 
-1. Fetch scripts from GitHub (Step 0)
-2. Run `query_report.py generate-sql --agent-list-only` → get agent-list SQL
-3. Execute agent-list SQL via Metabase MCP → get user_ids
-4. Run `query_report.py generate-sql --user-ids '[...]'` → get batch SQL queries
-5. Execute each batch SQL via Metabase MCP → accumulate rows
-6. Write rows to `/tmp/agent-status/rows.json`
-7. Run `query_report.py build-contract` → writes `report_data.json`
-8. Run `build_email.py --chart-dir` → renders `output.html` + chart JPEGs
-9. Upload chart JPEGs to GitHub → get raw URLs
-10. Replace chart URL placeholders in HTML
-11. Deliver via Gmail MCP
+**Scripts repo:** `MattAtAloware/aloware-report-scripts` → `agent-status-report/build_email.py`
 
-**Scripts repo:** `MattAtAloware/aloware-report-scripts` → `agent-status-report/`
-
-**Working dir:** `/tmp/agent-status/` — create fresh at start:
+**Working dir:** `/tmp/agent-status/` — create at start:
 ```bash
 rm -rf /tmp/agent-status 2>/dev/null; mkdir -p /tmp/agent-status
 ```
 
-**TEST_MODE:** ON by default — all emails draft to `matthew@aloware.com` with a `[TEST]`
-subject prefix. User must say **"send live"** to disable.
+**TEST_MODE:** ON by default — all emails draft to `matthew@aloware.com` with a `[TEST]` subject prefix and an in-email banner. User must say **"send live"** to disable.
 
 ---
 
@@ -59,235 +48,220 @@ subject prefix. User must say **"send live"** to disable.
 | `end_date` | = start_date | `2026-04-10` |
 | `test_mode` | `true` | say "send live" to set false |
 
-**Date shortcuts** (pass directly to `query_report.py --start-date`):
-`yesterday`, `last week`, `this week`, `last 7 days`, `last month`, or `YYYY-MM-DD`
+**Date shortcuts** (resolve before querying):
+- nothing / "yesterday" → yesterday / yesterday
+- "last week" → last Mon / last Sun
+- "this week" → this Mon / today
+- "last 7 days" → 7 days ago / yesterday
+- "last month" → 1st of prior month / last day of prior month
 
 ---
 
-## Step 0 — Fetch scripts from GitHub
+## Step 0 — Fetch renderer from GitHub
 
-**Do this first.** Fetch both scripts in parallel. If either fails, abort immediately.
+**Do this first, before any data queries.** If it fails, abort immediately.
+
+The renderer is pure Python with **zero external dependencies** — no matplotlib, no PIL,
+no pip installs needed. It generates email-safe HTML with all inline CSS, no JavaScript,
+no images. Output is ~20KB for 16 agents, ~45KB for 28 agents. Gmail-compatible.
 
 ```python
 import base64
 
-# Fetch query_report.py
-r1 = mcp__github__get_file_contents(
-    owner="MattAtAloware", repo="aloware-report-scripts",
-    path="agent-status-report/query_report.py"
-)
-open("/tmp/agent-status/query_report.py", "w").write(
-    base64.b64decode(r1["content"]).decode("utf-8")
-)
-
-# Fetch build_email.py
-r2 = mcp__github__get_file_contents(
-    owner="MattAtAloware", repo="aloware-report-scripts",
+result = mcp__github__get_file_contents(
+    owner="MattAtAloware",
+    repo="aloware-report-scripts",
     path="agent-status-report/build_email.py"
 )
-open("/tmp/agent-status/build_email.py", "w").write(
-    base64.b64decode(r2["content"]).decode("utf-8")
-)
+content = base64.b64decode(result["content"]).decode("utf-8")
+open("/tmp/agent-status/build_email.py", "w").write(content)
 ```
 
 | Condition | Action |
 |-----------|--------|
-| Both fetched | Continue |
-| Either fails | **ABORT.** Tell user which script could not be fetched. |
+| Fetch succeeds | Continue to Step 1 |
+| 404 or any error | **ABORT.** Tell user: "Could not fetch the renderer from GitHub." |
 
 ---
 
-## Step 1 — Get agent-list SQL from script
+## Step 1 — Fetch agent list
 
-```bash
-python /tmp/agent-status/query_report.py generate-sql \
-  --company-id {COMPANY_ID} \
-  --start-date "{START_DATE}" \
-  --end-date   "{END_DATE}" \
-  --agent-list-only
+```sql
+SELECT DISTINCT aa.user_id
+FROM aloware.agent_audits aa
+WHERE aa.company_id = {COMPANY_ID}
+  AND aa.property   = 'agent_status'
+  AND aa.created_at >= '{START_DATE} 00:00:00'
+  AND aa.created_at <  '{END_DATE_EXCLUSIVE} 00:00:00'
+ORDER BY aa.user_id
 ```
 
-This prints a JSON object. Extract the `"sql"` field. That is the exact SQL to run next.
-Also capture `"start_date"`, `"end_date"`, `"end_date_exclusive"` from the output —
-use these values for all subsequent steps (they are the resolved dates).
+`database_id: 2`, `row_limit: 500`. Collect all user_ids.
+
+If 0 rows: tell user "No agent activity found for this company/date range." Do not proceed.
 
 ---
 
-## Step 2 — Execute agent-list SQL via Metabase
+## Step 2 — Query status data in batches of 60
 
-Run the SQL from Step 1 verbatim:
-- `database_id: 2`
-- `row_limit: 500`
+**Why batches:** `metabase_execute` silently truncates at 500 rows. Large clients have
+200+ agents × 7 statuses = 1,400+ rows/day. Batch by 60 user_ids (= 420 rows max per
+call). Run the query below once per batch, accumulate all rows — the renderer handles
+final aggregation, so pass the full raw unmerged list.
 
-Collect all `user_id` values from the result rows into a JSON array: `[id1, id2, ...]`
+**How duration is calculated — LEAD(), not SUM(duration):**
 
-If 0 rows: tell user "No agent activity found for this company/date range." Stop.
+The `duration` column in `agent_audits` stores how long the agent was in the *previous*
+(from) status before transitioning — **not** the current status. It can represent days of
+accumulated time if an agent hasn't logged in recently and is completely unreliable for
+daily reports.
 
----
+Instead, use `LEAD()` to compute actual wall-clock time between consecutive transitions:
+- Partition by `(user_id, DATE(created_at))` to prevent time bleeding across day boundaries
+- Use `"to"` as the status key (the status the agent *entered*)
+- When `next_at IS NULL AND status_code = '0'` (trailing offline), set duration to 0
+  instead of filling with midnight — this prevents phantom offline hours for agents
+  who logged off before midnight
 
-## Step 3 — Get batch SQL queries from script
+`{BATCH_USER_IDS}` = comma-separated ids from current batch, e.g. `123,456,789`
+`{END_DATE_EXCLUSIVE}` = day after end_date
 
-```bash
-python /tmp/agent-status/query_report.py generate-sql \
-  --company-id {COMPANY_ID} \
-  --start-date "{START_DATE}" \
-  --end-date   "{END_DATE}" \
-  --user-ids   '{USER_IDS_JSON_ARRAY}'
+```sql
+WITH transitions AS (
+  SELECT
+    aa.user_id,
+    (u.first_name || ' ' || u.last_name)  AS agent_name,
+    aa."to"                                AS status_code,
+    aa.created_at                          AS started_at,
+    LEAD(aa.created_at) OVER (
+      PARTITION BY aa.user_id, DATE(aa.created_at)
+      ORDER BY aa.created_at
+    )                                      AS next_at
+  FROM aloware.agent_audits aa
+  JOIN aloware.users u ON u.id = aa.user_id
+  WHERE aa.company_id = {COMPANY_ID}
+    AND aa.user_id    IN ({BATCH_USER_IDS})
+    AND aa.property   = 'agent_status'
+    AND aa.created_at >= '{START_DATE} 00:00:00'
+    AND aa.created_at <  '{END_DATE_EXCLUSIVE} 00:00:00'
+    AND aa."to"       IN ('0','1','2','3','4','5','6')
+),
+with_duration AS (
+  SELECT
+    agent_name,
+    status_code,
+    CASE
+      WHEN next_at IS NULL AND status_code = '0' THEN 0
+      WHEN next_at IS NULL THEN EXTRACT(EPOCH FROM (DATE_TRUNC('day', started_at) + INTERVAL '1 day' - started_at))
+      ELSE EXTRACT(EPOCH FROM (next_at - started_at))
+    END AS duration_secs
+  FROM transitions
+)
+SELECT
+  agent_name,
+  status_code,
+  SUM(duration_secs)::int AS total_seconds
+FROM with_duration
+WHERE duration_secs >= 0
+GROUP BY agent_name, status_code
+ORDER BY agent_name, status_code
 ```
 
-This prints a JSON object with a `"queries"` array. Each element has:
-- `"sql"` — the exact SQL to run
-- `"database_id"` — always 2
-- `"row_limit"` — always 500
-- `"batch"` / `"total_batches"` — for progress tracking
+`database_id: 2`, `row_limit: 500`.
+
+**Status codes:** 0=Offline 1=Available 2=Busy 3=On Break 4=On Call 5=Wrap-Up 6=Ringing
+
+**Note on legacy data:** Some rows contain non-numeric values in `"to"` (e.g. `"offline"`
+from older app versions). The `IN ('0',...,'6')` filter excludes these automatically.
 
 ---
 
-## Step 4 — Execute batch SQL queries via Metabase
+## Step 3 — Write data contract JSON
 
-Run each query from Step 3 verbatim against Metabase (`database_id: 2`, `row_limit: 500`).
-Accumulate all result rows across all batches into a single list.
+After all batches complete, write `/tmp/agent-status/report_data.json`.
+This is the only interface between Claude and the renderer — no other data passing.
 
-Each row has: `agent_name`, `status_code`, `total_seconds`.
-
-Write the accumulated rows to `/tmp/agent-status/rows.json`:
 ```python
 import json
-json.dump(all_rows, open("/tmp/agent-status/rows.json", "w"))
+from datetime import datetime
+
+test_mode = True  # flip to False only if user said "send live"
+
+contract = {
+    "meta": {
+        "skill_name": "agent-status-time-report",
+        "company_name": company_name,
+        "company_id": company_id,
+        "date_range": {"start": start_date, "end": end_date},
+        "output_format": "email",
+        "test_mode": test_mode,
+        "generated_at": datetime.now().isoformat()
+    },
+    "rows": all_accumulated_rows   # raw list across all batches — renderer aggregates internally
+}
+
+with open("/tmp/agent-status/report_data.json", "w") as f:
+    json.dump(contract, f)
 ```
+
+Each row: `{"agent_name": "Ana Cruz", "status_code": "1", "total_seconds": 8435}`
 
 ---
 
-## Step 5 — Build data contract
+## Step 4 — Run renderer
 
-```bash
-python /tmp/agent-status/query_report.py build-contract \
-  --company-id   {COMPANY_ID} \
-  --company-name "{COMPANY_NAME}" \
-  --start-date   "{START_DATE}" \
-  --end-date     "{END_DATE}" \
-  --rows-json    /tmp/agent-status/rows.json \
-  --out          /tmp/agent-status/report_data.json \
-  {--test-mode if test_mode else ""}
-```
-
-| Condition | Action |
-|-----------|--------|
-| Exits 0 | Continue |
-| Exits non-zero | Show error. Do not proceed. |
-
----
-
-## Step 6 — Run renderer with external charts
-
-Run `build_email.py` with `--chart-dir` to save chart images as separate files
-instead of embedding them as base64. The HTML will contain `{{BAR_CHART_URL}}`
-and `{{DONUT_CHART_URL}}` placeholders where the chart images belong.
+The renderer is pure Python — **no pip installs needed**. No matplotlib, no PIL, no
+external dependencies. It generates email-safe HTML with all inline CSS, no JavaScript,
+no images of any kind.
 
 ```bash
 python /tmp/agent-status/build_email.py \
-  --input     /tmp/agent-status/report_data.json \
-  --out       /tmp/agent-status/output.html \
-  --chart-dir /tmp/agent-status/charts
+  --input /tmp/agent-status/report_data.json \
+  --out   /tmp/agent-status/output.html
 ```
-
-This produces:
-- `/tmp/agent-status/output.html` — HTML with URL placeholders (~24-46KB, no base64)
-- `/tmp/agent-status/charts/bar_chart.jpg` — stacked bar chart (~25-62KB)
-- `/tmp/agent-status/charts/donut_chart.jpg` — donut chart (~7-8KB)
 
 | Condition | Action |
 |-----------|--------|
-| Exits 0, all 3 files exist | Continue |
+| Exits 0, output.html exists | Continue |
 | Exits non-zero | Show full traceback. Do not improvise HTML. |
-| Any file missing | ABORT. |
+| output.html missing | ABORT. |
 
 ---
 
-## Step 7 — Upload charts to GitHub and replace placeholders
+## Step 5 — Deliver via Gmail MCP
 
-### 7a. Upload chart images to GitHub
+**CRITICAL: Do NOT use a subagent for delivery.** Subagents truncate or improvise HTML
+when the body is large. Instead, read the HTML directly and call `gmail_create_draft`
+from the main context.
 
-Upload both chart JPEGs to the repo using `create_or_update_file`. The content
-must be the raw file bytes encoded as base64.
+**For files ≤20KB (~16 agents):** Read the file directly with the Read tool, then pass
+the full contents to `gmail_create_draft`.
 
-**Path convention:** `agent-status-report/charts/{company_id}_{date_label}/bar_chart.jpg`
-
-Where `date_label` is:
-- Single day: `2026-04-13`
-- Date range: `2026-04-07_to_2026-04-13`
-
-```python
-import base64
-
-date_label = start_date if start_date == end_date else f"{start_date}_to_{end_date}"
-chart_path_prefix = f"agent-status-report/charts/{company_id}_{date_label}"
-
-bar_b64 = base64.b64encode(open("/tmp/agent-status/charts/bar_chart.jpg", "rb").read()).decode()
-donut_b64 = base64.b64encode(open("/tmp/agent-status/charts/donut_chart.jpg", "rb").read()).decode()
-```
-
-Upload both via `mcp__github__create_or_update_file`:
-- `owner`: `MattAtAloware`
-- `repo`: `aloware-report-scripts`
-- `branch`: `main`
-- `path`: `{chart_path_prefix}/bar_chart.jpg` and `{chart_path_prefix}/donut_chart.jpg`
-- `content`: the base64 string of the raw JPEG bytes
-- `message`: `Upload charts for {company_name} {date_label}`
-
-**If updating existing charts** (re-running a report for the same date), you must
-include the `sha` of the existing file. Use `get_file_contents` first to check,
-or handle the 422 error by fetching the SHA and retrying.
-
-### 7b. Build raw URLs
-
-```
-bar_url   = https://raw.githubusercontent.com/MattAtAloware/aloware-report-scripts/main/{chart_path_prefix}/bar_chart.jpg
-donut_url = https://raw.githubusercontent.com/MattAtAloware/aloware-report-scripts/main/{chart_path_prefix}/donut_chart.jpg
-```
-
-### 7c. Replace placeholders in HTML
+**For files >20KB (~28+ agents):** The Read tool has a 10,000-token limit. Split the
+HTML into two parts using Python:
 
 ```python
-html = open("/tmp/agent-status/output.html").read()
-html = html.replace("{{BAR_CHART_URL}}", bar_url)
-html = html.replace("{{DONUT_CHART_URL}}", donut_url)
-open("/tmp/agent-status/output_final.html", "w").write(html)
-```
-
----
-
-## Step 8 — Deliver via Gmail MCP
-
-**CRITICAL: Do NOT use a subagent for delivery.** Subagents truncate or improvise HTML.
-Always read the file directly and call `gmail_create_draft` from the main context.
-
-**With external charts, the HTML is ~24-46KB** (no base64 image data). Most reports
-(≤20 agents) will be under the Read tool's token limit.
-
-**If the file exceeds the Read tool limit** (28+ agents, ~46KB), split at a `</tr>`
-boundary:
-```python
-html = open('/tmp/agent-status/output_final.html').read()
+html = open('/tmp/agent-status/output.html').read()
 mid = len(html) // 2
 split_point = html.index('</tr>', mid) + len('</tr>')
 open('/tmp/agent-status/part1.html', 'w').write(html[:split_point])
 open('/tmp/agent-status/part2.html', 'w').write(html[split_point:])
 ```
-Read both parts and concatenate when calling `gmail_create_draft`.
+
+Read both parts, then concatenate when calling `gmail_create_draft`.
 
 ```
 Call gmail_create_draft with:
   to          = "matthew@aloware.com" (test_mode=true) OR <recipients> (live)
   subject     = "[TEST] Agent Status Time Report – {company} – {date_label}" (test_mode=true)
                 OR "Agent Status Time Report – {company} – {date_label}" (live)
-  body        = <full HTML contents — must start with <!DOCTYPE html>>
+  body        = <full HTML contents — part1 + part2, must start with <!DOCTYPE html>>
   contentType = "text/html"   ← camelCase, critical
 ```
 
 ---
 
-## Step 9 — Confirm
+## Step 6 — Confirm
 
 Reply with: agent count, date range, draft recipient(s), and whether TEST_MODE was active.
 
@@ -297,33 +271,36 @@ Reply with: agent count, date range, draft recipient(s), and whether TEST_MODE w
 
 | Condition | Action |
 |-----------|--------|
-| GitHub script fetch fails | **ABORT immediately** |
-| Step 2 returns 0 rows | Tell user, confirm company_id and date range, stop |
-| query_report.py exits non-zero | Show error output. Do not freestyle. |
-| build_email.py exits non-zero | Show full traceback. Do not improvise HTML. |
-| Chart upload to GitHub fails | Show error. Retry once. If still failing, abort. |
+| GitHub renderer fetch fails | **ABORT immediately** |
+| Step 1 returns 0 rows | Tell user, confirm company_id and date range, stop |
+| Build script exits non-zero | Show traceback. Do not freestyle HTML. |
 | `gmail_create_draft` fails | Show error. Ask user if they want to retry. |
 
 ---
 
 ## Critical rules
 
-- **SQL lives in `query_report.py`, not here.** Never write SQL inline. Always get it
-  from the script's `generate-sql` command and execute it verbatim.
-- **Always batch.** `query_report.py` handles batch sizing (60 user_ids). Don't override it.
-- **Always use `--chart-dir` when rendering.** This saves charts as separate files and
-  uses URL placeholders in the HTML. Never use inline base64 — Gmail strips embedded
-  images, and base64 bloats the HTML beyond the Read tool's token limit.
-- **Upload charts to GitHub before delivering.** The HTML contains `{{BAR_CHART_URL}}`
-  and `{{DONUT_CHART_URL}}` placeholders that MUST be replaced with live
-  `raw.githubusercontent.com` URLs before sending.
-- **Never strip base64 from the HTML.** The old `re.sub(r'src="data:image/..."')` approach
-  is obsolete. Charts are now externally hosted.
-- **No activity found?** Don't send. Tell the user and confirm the date/company_id.
-- **database_id is 2.** Never use saved cards — permission errors.
+- **Use LEAD() on `"to"`, not `SUM(duration)` on `"from"`** — the `duration` column stores
+  time in the *previous* status and can represent days of accumulated time. LEAD() computes
+  actual wall-clock time between consecutive transitions for the same agent on the same day,
+  which is the only correct approach for daily/weekly reports.
+- **Partition LEAD() by `(user_id, DATE(created_at))`** — without the date partition, a
+  transition at 11:58 PM Monday would bleed into Tuesday's first transition.
+- **Strip trailing offline** — when the last event is going Offline (status 0) and
+  `next_at IS NULL`, set duration to 0. Otherwise every agent who logged off before
+  midnight gets phantom offline hours.
+- **Filter `"to" IN ('0',...,'6')`** — legacy rows may have string values like `"offline"`
+  which must be excluded or they inflate the wrong bucket.
+- **Always batch by 60 user_ids** — 200-agent clients = 1,400 rows/day, silent truncation at 500.
+- **No activity found?** Don't send. Tell the user and confirm the date/company_id before retrying.
+- **database_id is 2.** Do not use saved card 2477 — permission errors.
 - **TEST_MODE is always on by default.** Never send live without explicit user confirmation.
-- **No pip installs needed.** Both scripts have zero external dependencies beyond matplotlib/PIL
-  (already installed in the sandbox).
-- **Never use a subagent to deliver email.** Always call `gmail_create_draft` from main context.
-- **Gmail strips JavaScript.** The renderer produces email-safe HTML — no `<script>`,
+- **No pip installs needed.** The renderer has zero external dependencies — pure Python stdlib only.
+- **Never use a subagent to deliver email.** Subagents truncate large HTML bodies or
+  improvise their own HTML. Always read the file directly and call `gmail_create_draft`
+  from the main context. For files >20KB, split into two parts first.
+- **Gmail strips JavaScript.** The renderer must produce email-safe HTML — no `<script>`,
   no `<style>` blocks, all CSS inline. Table-based layout only.
+- **No charts, no images.** The report is pure HTML tables with inline CSS. KPI cards,
+  executive summary, and the color-coded agent breakdown table present all data visually
+  without any image dependencies.
