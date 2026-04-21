@@ -134,25 +134,45 @@ def status_batch_sql(
     start_date: str,
     end_excl: str,
 ) -> str:
+    """
+    Build status-duration SQL for a batch of user_ids.
+
+    Uses the combined dedup+filter approach:
+    - DISTINCT inside the deduped CTE collapses exact duplicate rows before
+      LEAD() runs, preventing phantom zero-second segments that inflate total_s.
+    - The IN ('0'..'6') filter inside deduped excludes legacy string statuses
+      (e.g. "to"='offline') before they enter the transition chain, preventing
+      them from consuming time from adjacent real-status rows.
+
+    This is more accurate than filter-only (leaves duplicate rows) or dedup-only
+    (lets legacy strings corrupt the transition chain).
+    """
     batch_ids = ", ".join(str(uid) for uid in user_ids)
-    return f"""WITH transitions AS (
-  SELECT
+    return f"""WITH deduped AS (
+  SELECT DISTINCT
     aa.user_id,
-    (u.first_name || ' ' || u.last_name) AS agent_name,
-    aa."to"                               AS status_code,
-    aa.created_at                         AS started_at,
-    LEAD(aa.created_at) OVER (
-      PARTITION BY aa.user_id, DATE(aa.created_at)
-      ORDER BY aa.created_at
-    )                                     AS next_at
+    aa."to"        AS status_code,
+    aa.created_at
   FROM aloware.agent_audits aa
-  JOIN aloware.users u ON u.id = aa.user_id
   WHERE aa.company_id = {company_id}
     AND aa.user_id    IN ({batch_ids})
     AND aa.property   = 'agent_status'
     AND aa.created_at >= '{start_date} 00:00:00'
     AND aa.created_at <  '{end_excl} 00:00:00'
     AND aa."to"       IN ('0','1','2','3','4','5','6')
+),
+transitions AS (
+  SELECT
+    d.user_id,
+    (u.first_name || ' ' || u.last_name) AS agent_name,
+    d.status_code,
+    d.created_at                          AS started_at,
+    LEAD(d.created_at) OVER (
+      PARTITION BY d.user_id, DATE(d.created_at)
+      ORDER BY d.created_at
+    )                                     AS next_at
+  FROM deduped d
+  JOIN aloware.users u ON u.id = d.user_id
 ),
 with_duration AS (
   SELECT
