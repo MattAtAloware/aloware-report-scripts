@@ -229,6 +229,11 @@ def build_email_html(agents, company, date_label, company_id):
             return fmt_hms(val) if val else '<span class="nd">&#8212;</span>'
 
         row_cls = "ro" if i % 2 == 0 else "ra"
+        # NOTE: the inner active% bar is wrapped in its own <table><tr>...</tr></table>
+        # so the outer agent <tr> is properly closed AFTER all status cells.
+        # This keeps the HTML well-formed and lets simple <tr>...</tr> regexes
+        # (e.g. the resort script in agent-status-time-report SKILL.md) match
+        # exactly one agent row at a time.
         table_rows += (
             f'<tr class="{row_cls}">'
             f'<td class="an">{agent_name}</td>'
