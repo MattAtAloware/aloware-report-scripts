@@ -20,7 +20,8 @@ Follows the **Claude-orchestrates, Python-renders** pattern.
 
 All SQL generation, batching, date resolution, data contract building, and HTML
 rendering are handled by two Python scripts in `MattAtAloware/aloware-report-scripts`.
-Claude's only job is: run scripts → pass SQL to Metabase MCP → pass HTML to Gmail MCP.
+Claude's only job is: stage scripts via GitHub MCP → run scripts → pass SQL to
+Metabase MCP → pass HTML to Gmail MCP.
 
 **Claude never writes SQL, never builds JSON contracts, never generates HTML.**
 The scripts are the single source of truth.
@@ -57,16 +58,39 @@ The scripts are the single source of truth.
 Before anything else, load all MCP tool schemas in a single call:
 
 ```
-ToolSearch("select:mcp__metabase__execute,mcp__c3f017eb-2a8d-48aa-ab10-03ecb2b2a2dd__gmail_create_draft")
+ToolSearch("select:mcp__metabase__execute,mcp__c3f017eb-2a8d-48aa-ab10-03ecb2b2a2dd__gmail_create_draft,mcp__github__get_file_contents")
 ```
 
-### Step 1 — Setup (1 Bash call + 1 Metabase call)
+### Step 1 — Stage scripts and run setup (2 GitHub-MCP calls + 1 Bash + 1 Metabase)
 
-Fetch scripts from GitHub, resolve dates, get agent-list SQL, then execute it:
+**Do NOT use `curl` to fetch scripts from GitHub.** Sandboxed shells (Cowork)
+consistently return 403 from `raw.githubusercontent.com`. Use the GitHub MCP
+instead — it's already authenticated and never fails for these files.
+
+Stage both scripts:
+
+```
+mcp__github__get_file_contents(
+  owner: "MattAtAloware",
+  repo: "aloware-report-scripts",
+  path: "agent-status-report/run_report.py"
+)
+# Response includes "content" (base64). Decode and save to $WORK_DIR/run_report.py.
+
+mcp__github__get_file_contents(
+  owner: "MattAtAloware",
+  repo: "aloware-report-scripts",
+  path: "agent-status-report/build_email.py"
+)
+# Decode and save to $WORK_DIR/build_email.py.
+```
+
+Send these two calls in parallel. Then write both files into the work_dir
+(use the file Write tool for the absolute path under your outputs folder so
+the same path is visible to both bash and the Python subprocess) and run setup:
 
 ```bash
-WORK_DIR=$(mktemp -d)
-curl -sL https://raw.githubusercontent.com/MattAtAloware/aloware-report-scripts/main/agent-status-report/run_report.py -o "$WORK_DIR/run_report.py"
+WORK_DIR="<path you just wrote both .py files into>"
 python3 "$WORK_DIR/run_report.py" setup \
   --company-id {COMPANY_ID} \
   --company-name "{COMPANY_NAME}" \
@@ -75,6 +99,10 @@ python3 "$WORK_DIR/run_report.py" setup \
   {--test-mode if applicable} \
   --work-dir "$WORK_DIR"
 ```
+
+`run_report.py setup` will detect that `build_email.py` is already present in
+`$WORK_DIR` and skip the network entirely (it falls back to api.github.com if
+the file is missing — never raw.githubusercontent.com first).
 
 Output is JSON. Extract `agent_list_query.sql` and execute it via Metabase MCP:
 
@@ -159,12 +187,16 @@ and TEST_MODE status. All stats come from the render output — do not parse HTM
 
 | Client size | Metabase batches | Total tool calls |
 |-------------|-----------------|------------------|
-| Small (≤60 agents) | 1 | 6 |
-| Medium (61-120) | 2 | 7 |
-| Large (121-180) | 3 | 8 |
+| Small (≤60 agents) | 1 | 8 |
+| Medium (61-120) | 2 | 9 |
+| Large (121-180) | 3 | 10 |
 
-Breakdown: ToolSearch(1) + Bash-setup(1) + Metabase-agents(1) + Bash-plan(1) +
-Metabase-batches(N) + Bash-render(1) + Gmail(1) = **6 + (N-1)** total calls.
+Breakdown: ToolSearch(1) + GitHub-MCP-fetch×2 + Bash-setup(1) +
+Metabase-agents(1) + Bash-plan(1) + Metabase-batches(N) + Bash-render(1) +
+Gmail(1) = **8 + (N-1)** total calls.
+
+(GitHub MCP calls can be sent in parallel, so wall time is unchanged from the
+old curl-based flow.)
 
 ---
 
@@ -172,7 +204,8 @@ Metabase-batches(N) + Bash-render(1) + Gmail(1) = **6 + (N-1)** total calls.
 
 | Condition | Action |
 |-----------|--------|
-| Setup fails (GitHub unreachable) | ABORT immediately |
+| GitHub MCP fetch fails | ABORT immediately. Do not attempt curl as fallback — it will 403. |
+| Setup fails | Show stderr from output JSON. ABORT. |
 | Step 1 returns 0 rows | Tell user, confirm company_id and date range |
 | Render fails (non-zero exit) | Show stderr from output JSON. Do not improvise HTML. |
 | Gmail fails | Show error. Ask user if they want to retry. |
@@ -181,12 +214,16 @@ Metabase-batches(N) + Bash-render(1) + Gmail(1) = **6 + (N-1)** total calls.
 
 ## Critical rules
 
+- **Never use curl to fetch scripts from GitHub.** Always use the GitHub MCP.
+  raw.githubusercontent.com 403s in sandboxed shells.
 - **Never write SQL.** run_report.py generates all SQL. Execute it verbatim.
 - **Never build JSON contracts.** run_report.py builds the data contract internally.
 - **Never generate HTML.** build_email.py renders it. run_report.py calls it.
 - **Never use TodoWrite in automated/scheduled runs.** No user is watching.
 - **Never call the Skill tool in scheduled runs.** Instructions are already provided.
-- **Use mktemp -d, not /tmp/agent-status.** Prevents cross-session permission conflicts.
+- **Use a stable work_dir under your outputs folder, not /tmp.** Both bash and
+  the Python subprocess need to see the same path; the file tools and bash see
+  different roots, so an absolute path under `outputs/` is the safest pick.
 - **database_id is 2.** Always.
 - **TEST_MODE is on by default.** Never send live without explicit user confirmation.
 - **Batch by 60 user_ids.** run_report.py handles this — just pass all user_ids.
