@@ -53,7 +53,7 @@ GITHUB_RAW_URL = (
     "https://raw.githubusercontent.com/MattAtAloware/"
     "aloware-report-scripts/main/agent-status-report/build_email.py"
 )
-# Fallback: GitHub API (base64-encoded)
+# GitHub API (base64-encoded). More reliable than raw URL in sandboxed envs.
 GITHUB_API_URL = (
     "https://api.github.com/repos/MattAtAloware/"
     "aloware-report-scripts/contents/agent-status-report/build_email.py"
@@ -200,22 +200,23 @@ ORDER BY agent_name, status_code"""
 # ---------------------------------------------------------------------------
 
 def fetch_renderer(work_dir: str) -> str:
-    """Download build_email.py to work_dir. Returns path on success."""
+    """Download build_email.py to work_dir. Returns path on success.
+
+    Order of attempts:
+      0. If file is already present in work_dir (pre-staged via GitHub MCP from
+         SKILL.md), reuse it. No network needed.
+      1. GitHub API (api.github.com). More reliable than raw URL inside sandboxed
+         shells (e.g. Cowork) which often 403 on raw.githubusercontent.com.
+      2. Raw URL (raw.githubusercontent.com). Fallback for envs where api.github.com
+         is unauthenticated and rate-limited.
+    """
     dest = os.path.join(work_dir, "build_email.py")
 
-    # Try raw URL first (faster, no base64 decoding)
-    try:
-        req = urllib.request.Request(GITHUB_RAW_URL)
-        req.add_header("User-Agent", "aloware-run-report/1.0")
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            content = resp.read().decode("utf-8")
-        with open(dest, "w") as f:
-            f.write(content)
+    # 0. Pre-staged file (preferred path for sandboxed environments)
+    if os.path.exists(dest) and os.path.getsize(dest) > 0:
         return dest
-    except Exception:
-        pass
 
-    # Fallback: GitHub API (base64)
+    # 1. GitHub API (base64) — primary
     try:
         req = urllib.request.Request(GITHUB_API_URL)
         req.add_header("User-Agent", "aloware-run-report/1.0")
@@ -226,7 +227,19 @@ def fetch_renderer(work_dir: str) -> str:
         with open(dest, "w") as f:
             f.write(content)
         return dest
-    except Exception as e:
+    except Exception:
+        pass
+
+    # 2. Raw URL — fallback
+    try:
+        req = urllib.request.Request(GITHUB_RAW_URL)
+        req.add_header("User-Agent", "aloware-run-report/1.0")
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            content = resp.read().decode("utf-8")
+        with open(dest, "w") as f:
+            f.write(content)
+        return dest
+    except Exception:
         return None
 
 
@@ -248,7 +261,9 @@ def cmd_setup(args):
     if not renderer_path:
         print(json.dumps({
             "status": "error",
-            "error": "Failed to fetch build_email.py from GitHub. ABORT."
+            "error": "Failed to fetch build_email.py from GitHub. ABORT. "
+                     "Tip: pre-stage build_email.py in work_dir via the GitHub "
+                     "MCP (mcp__github__get_file_contents) before calling setup."
         }))
         sys.exit(1)
 
@@ -473,7 +488,7 @@ def cmd_render(args):
         },
         "email": {
             "subject_prefix": "[TEST] " if args.test_mode else "",
-            "subject": f"Agent Status Time Report \u2013 {args.company_name} \u2013 {date_label}",
+            "subject": f"Agent Status Time Report – {args.company_name} – {date_label}",
         },
     }
     print(json.dumps(output))
