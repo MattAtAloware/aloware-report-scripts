@@ -49,11 +49,9 @@ from pathlib import Path
 
 BATCH_SIZE = 60
 DATABASE_ID = 2
-GITHUB_RAW_URL = (
-    "https://raw.githubusercontent.com/MattAtAloware/"
-    "aloware-report-scripts/main/agent-status-report/build_email.py"
-)
-# GitHub API (base64-encoded). More reliable than raw URL in sandboxed envs.
+# GitHub API (base64-encoded). The raw URL (raw.githubusercontent.com) is NOT
+# used as a fallback — it 403s reliably in Cowork's sandboxed shell, so keeping
+# it would just add latency and mislead error messages.
 GITHUB_API_URL = (
     "https://api.github.com/repos/MattAtAloware/"
     "aloware-report-scripts/contents/agent-status-report/build_email.py"
@@ -204,11 +202,10 @@ def fetch_renderer(work_dir: str) -> str:
 
     Order of attempts:
       0. If file is already present in work_dir (pre-staged via GitHub MCP from
-         SKILL.md), reuse it. No network needed.
-      1. GitHub API (api.github.com). More reliable than raw URL inside sandboxed
-         shells (e.g. Cowork) which often 403 on raw.githubusercontent.com.
-      2. Raw URL (raw.githubusercontent.com). Fallback for envs where api.github.com
-         is unauthenticated and rate-limited.
+         SKILL.md), reuse it. No network needed. THIS IS THE EXPECTED PATH.
+      1. GitHub API (api.github.com). Used only when SKILL.md didn't pre-stage
+         the file. The raw URL (raw.githubusercontent.com) is intentionally NOT
+         attempted — it 403s in Cowork's sandboxed shell.
     """
     dest = os.path.join(work_dir, "build_email.py")
 
@@ -216,7 +213,7 @@ def fetch_renderer(work_dir: str) -> str:
     if os.path.exists(dest) and os.path.getsize(dest) > 0:
         return dest
 
-    # 1. GitHub API (base64) — primary
+    # 1. GitHub API (base64) — only network attempt
     try:
         req = urllib.request.Request(GITHUB_API_URL)
         req.add_header("User-Agent", "aloware-run-report/1.0")
@@ -224,18 +221,6 @@ def fetch_renderer(work_dir: str) -> str:
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read())
         content = base64.b64decode(data["content"]).decode("utf-8")
-        with open(dest, "w") as f:
-            f.write(content)
-        return dest
-    except Exception:
-        pass
-
-    # 2. Raw URL — fallback
-    try:
-        req = urllib.request.Request(GITHUB_RAW_URL)
-        req.add_header("User-Agent", "aloware-run-report/1.0")
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            content = resp.read().decode("utf-8")
         with open(dest, "w") as f:
             f.write(content)
         return dest
