@@ -234,7 +234,7 @@ def build_email_html(agents, company, date_label, company_id):
             f'<td class="an">{agent_name}</td>'
             f'<td class="ac"><table cellpadding="0" cellspacing="0" border="0"><tr>'
             f'<td class="pb"><div class="bar" style="width:{pct_w}"></div></td>'
-            f'<td class="pv">{pct_val}</td>'
+            f'<td class="pv" data-metric="active">{pct_val}</td>'
             f'</tr></table></td>'
             f'<td class="s1">{cell("1")}</td>'
             f'<td class="s4">{cell("4")}</td>'
