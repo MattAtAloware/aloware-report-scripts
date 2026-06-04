@@ -5,9 +5,14 @@ build_email.py - Generate a fully static, email-safe HTML report.
 
 Pure Python — zero external dependencies (no matplotlib, no PIL, no pip installs).
 Produces self-contained HTML that renders identically in Gmail, Outlook,
-and Apple Mail. No images, no JavaScript. Uses <style> in <head> for
-agent table rows (Gmail supports this since 2016), inline CSS for
-one-off elements.
+and Apple Mail. No images, no JavaScript.
+
+Gmail compatibility rules applied:
+- bgcolor attribute on <td> elements (not background on <table> or <div>)
+- No CSS gradients (stripped by Gmail)
+- No rgba() colors (use solid hex)
+- <p> tags instead of <div> for text blocks
+- All colors in inline styles on the innermost element
 
 Usage:
   python build_email.py --input report_data.json --out output.html
@@ -124,9 +129,9 @@ def build_exec_summary_html(agents: dict) -> str:
 
     oncall_str = f" and {fmt_hms(top_oncall)} on call" if top_oncall else ""
     narrative_parts = [
-        f'<strong>Top performer</strong> was ',
-        f'<span style="color:#4ade80;font-weight:700">{top_name}</span> with ',
-        f'<span style="color:#4ade80;font-weight:700">{top_pct:.0f}% active time</span>{oncall_str}. '
+        f'<strong style="color:#1e2433">Top performer</strong> was ',
+        f'<span style="color:#16a34a;font-weight:bold">{top_name}</span> with ',
+        f'<span style="color:#16a34a;font-weight:bold">{top_pct:.0f}% active time</span>{oncall_str}. '
     ]
 
     if low_agents:
@@ -138,58 +143,56 @@ def build_exec_summary_html(agents: dict) -> str:
         else:
             name_str = ", ".join(names[:-1]) + ", and " + names[-1]
         narrative_parts.append(
-            f'<span style="color:#f87171;font-weight:700">{len(low_agents)} agent'
+            f'<span style="color:#dc2626;font-weight:bold">{len(low_agents)} agent'
             f'{"s" if len(low_agents)>1 else ""}</span>'
-            f' - {name_str} - had '
-            f'<span style="color:#f87171;font-weight:700">less than 45% active time</span>. '
+            f' ({name_str}) had '
+            f'<span style="color:#dc2626;font-weight:bold">less than 45% active time</span>. '
         )
 
     if abs(delta) < 1:
         narrative_parts.append(
-            f'Team utilization is <strong style="color:#fff">{util_pct:.1f}%</strong>,'
+            f'Team utilization is <strong style="color:#1e2433">{util_pct:.1f}%</strong>,'
             f' right at the {TARGET}% target.'
         )
     elif delta < 0:
         narrative_parts.append(
-            f'Team-wide productive time is <strong style="color:#fff">{util_pct:.1f}%</strong>'
-            f' - <span style="color:#fbff24;font-weight:700">{abs(delta):.1f} points below</span>'
+            f'Team-wide productive time is <strong style="color:#1e2433">{util_pct:.1f}%</strong>'
+            f' &#8212; <span style="color:#d97706;font-weight:bold">{abs(delta):.1f} pts below</span>'
             f' the {TARGET}% target.'
         )
     else:
         narrative_parts.append(
-            f'Team-wide productive time is <strong style="color:#fff">{util_pct:.1f}%</strong>'
-            f' - <span style="color:#4ade80;font-weight:700">{delta:.1f} points above</span>'
+            f'Team-wide productive time is <strong style="color:#1e2433">{util_pct:.1f}%</strong>'
+            f' &#8212; <span style="color:#16a34a;font-weight:bold">{delta:.1f} pts above</span>'
             f' the {TARGET}% target.'
         )
 
     narrative_html = "".join(narrative_parts)
-    score_bar_width = f"{min(util_pct, 100):.1f}%"
+    util_color = "#16a34a" if util_pct >= TARGET else "#d97706"
 
+    # bgcolor on <td> — the ONLY Gmail-reliable way to set a background color
     return (
-        f'<table width="100%" cellpadding="0" cellspacing="0" border="0" '
-        f'style="background:linear-gradient(135deg,#1a2744 0%,#2c3e6b 100%);border-radius:10px;margin-bottom:16px">'
+        f'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px">'
         f'<tr>'
-        f'<td style="padding:24px 28px;vertical-align:middle">'
-        f'<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;'
-        f'color:rgba(255,255,255,0.45);margin-bottom:10px">Today\'s Summary</div>'
-        f'<div style="font-size:14px;line-height:1.65;color:rgba(255,255,255,0.88)">{narrative_html}</div>'
+        f'<td bgcolor="#f1f5f9" style="padding:20px 24px;vertical-align:top;border:1px solid #e2e8f0">'
+        f'<p style="margin:0 0 6px 0;font-size:10px;font-weight:bold;letter-spacing:1px;'
+        f'text-transform:uppercase;color:#475569;font-family:Arial,sans-serif">TODAY\'S SUMMARY</p>'
+        f'<p style="margin:0;font-size:14px;line-height:1.7;color:#1e293b;font-family:Arial,sans-serif">'
+        f'{narrative_html}</p>'
         f'</td>'
-        f'<td style="padding:24px 28px;text-align:center;vertical-align:middle;white-space:nowrap;border-left:1px solid rgba(255,255,255,0.1)">'
-        f'<div style="font-size:52px;font-weight:900;line-height:1;color:#fff;letter-spacing:-1px;">'
-        f'{util_pct:.1f}<span style="font-size:26px;font-weight:600;color:rgba(255,255,255,0.6)">%</span></div>'
-        f'<div style="font-size:10px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1px;margin-top:4px;">'
-        f'Team Utilization</div>'
-        f'<table cellpadding="0" cellspacing="0" border="0" style="margin:8px auto 0;width:110px">'
-        f'<tr><td style="background:rgba(255,255,255,0.15);border-radius:3px;height:6px;overflow:hidden">'
-        f'<div style="background:linear-gradient(90deg,#4ade80,#22c55e);height:6px;width:{score_bar_width};border-radius:3px"></div>'
-        f'</td></tr></table>'
+        f'<td bgcolor="#f1f5f9" width="150" style="padding:20px 24px;text-align:center;'
+        f'vertical-align:middle;border:1px solid #e2e8f0;border-left:none">'
+        f'<p style="margin:0;font-size:44px;font-weight:bold;line-height:1;color:{util_color};'
+        f'font-family:Arial,sans-serif">{util_pct:.1f}<span style="font-size:20px">%</span></p>'
+        f'<p style="margin:4px 0 0 0;font-size:10px;color:#475569;text-transform:uppercase;'
+        f'letter-spacing:1px;font-family:Arial,sans-serif">Team Utilization</p>'
         f'</td>'
         f'</tr></table>'
     )
 
 
 def build_email_html(agents, company, date_label, company_id):
-    """Build the full email HTML. No images — pure table-based layout."""
+    """Build the full email HTML. Gmail-safe: bgcolor on td, no gradients, no rgba."""
     kpis = compute_kpis(agents)
 
     sorted_agents = sorted(
@@ -206,15 +209,22 @@ def build_email_html(agents, company, date_label, company_id):
         ("3", "On Break",   "#eab308"),
         ("0", "Offline",    "#94a3b8"),
     ]
+
     kpi_cells = ""
-    for code, label, color in kpi_configs:
+    for i, (code, label, color) in enumerate(kpi_configs):
+        right_pad = "4px" if i < len(kpi_configs) - 1 else "0"
         kpi_cells += (
-            f'<td style="padding:0 6px 0 0;vertical-align:top">'
-            f'<div style="background:#fff;border-radius:8px;padding:14px 16px;border-top:3px solid {color};min-width:100px">'
-            f'<div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">{label}</div>'
-            f'<div style="font-size:20px;font-weight:700;color:#1e2433">{kpis[code]["time"]}</div>'
-            f'<div style="font-size:11px;color:#6b7280;margin-top:2px">{kpis[code]["pct"]} of total</div>'
-            f'</div></td>'
+            f'<td style="padding:0 {right_pad} 0 0;vertical-align:top">'
+            f'<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
+            f'<td bgcolor="#ffffff" style="padding:14px 16px;border-top:3px solid {color};'
+            f'border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0">'
+            f'<p style="margin:0 0 4px 0;font-size:10px;color:#6b7280;text-transform:uppercase;'
+            f'letter-spacing:.5px;font-family:Arial,sans-serif">{label}</p>'
+            f'<p style="margin:0;font-size:20px;font-weight:bold;color:#1e2433;font-family:Arial,sans-serif">'
+            f'{kpis[code]["time"]}</p>'
+            f'<p style="margin:2px 0 0 0;font-size:11px;color:#6b7280;font-family:Arial,sans-serif">'
+            f'{kpis[code]["pct"]} of total</p>'
+            f'</td></tr></table></td>'
         )
 
     table_rows = ""
@@ -229,11 +239,6 @@ def build_email_html(agents, company, date_label, company_id):
             return fmt_hms(val) if val else '<span class="nd">&#8212;</span>'
 
         row_cls = "ro" if i % 2 == 0 else "ra"
-        # NOTE: the inner active% bar is wrapped in its own <table><tr>...</tr></table>
-        # so the outer agent <tr> is properly closed AFTER all status cells.
-        # This keeps the HTML well-formed and lets simple <tr>...</tr> regexes
-        # (e.g. the resort script in agent-status-time-report SKILL.md) match
-        # exactly one agent row at a time.
         table_rows += (
             f'<tr class="{row_cls}">'
             f'<td class="an">{agent_name}</td>'
@@ -274,41 +279,41 @@ def build_email_html(agents, company, date_label, company_id):
 .nd{{color:#d1d5db}}
 </style>
 </head>
-<body style="margin:0;padding:0;background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1e2433">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f2f5;padding:16px"><tr><td>
+<body style="margin:0;padding:0;background:#f0f2f5;font-family:Arial,sans-serif;color:#1e2433">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding:16px"><tr><td>
 
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#1a2744;border-radius:10px;margin-bottom:16px">
-  <tr><td style="padding:20px 28px">
-    <div style="font-size:20px;font-weight:700;color:#ffffff">Agent Status Time Report</div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.65);margin-top:3px">{company} &nbsp;&middot;&nbsp; {date_label} &nbsp;&middot;&nbsp; {agent_count} agents</div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px">
+  <tr><td bgcolor="#1e2433" style="padding:20px 28px">
+    <p style="margin:0;font-size:20px;font-weight:bold;color:#ffffff;font-family:Arial,sans-serif">Agent Status Time Report</p>
+    <p style="margin:4px 0 0 0;font-size:13px;color:#94a3b8;font-family:Arial,sans-serif">{company} &nbsp;&bull;&nbsp; {date_label} &nbsp;&bull;&nbsp; {agent_count} agents</p>
   </td></tr></table>
 
   {exec_summary_html}
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px">
   <tr>{kpi_cells}</tr></table>
 
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff;border-radius:10px;margin-bottom:16px">
-  <tr><td style="padding:20px 24px">
-    <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:#1e2433">Agent Status Breakdown - {date_label}</div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px">
+  <tr><td bgcolor="#ffffff" style="padding:20px 24px;border:1px solid #e2e8f0">
+    <p style="margin:0 0 14px 0;font-size:14px;font-weight:bold;color:#1e2433;font-family:Arial,sans-serif">Agent Status Breakdown - {date_label}</p>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;border-collapse:collapse">
       <thead><tr style="border-bottom:2px solid #e5e7eb">
-        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;font-weight:600">Agent</th>
-        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Active %</th>
-        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#22c55e;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Available</th>
-        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#3b82f6;text-transform:uppercase;letter-spacing:.5px;font-weight:600">On Call</th>
-        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#a855f7;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Wrap-Up</th>
-        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#f97316;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Busy</th>
-        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#eab308;text-transform:uppercase;letter-spacing:.5px;font-weight:600">On Break</th>
-        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#06b6d4;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Ringing</th>
-        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Offline</th>
+        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;font-weight:600;font-family:Arial,sans-serif">Agent</th>
+        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:Arial,sans-serif">Active %</th>
+        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#22c55e;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:Arial,sans-serif">Available</th>
+        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#3b82f6;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:Arial,sans-serif">On Call</th>
+        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#a855f7;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:Arial,sans-serif">Wrap-Up</th>
+        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#f97316;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:Arial,sans-serif">Busy</th>
+        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#eab308;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:Arial,sans-serif">On Break</th>
+        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#06b6d4;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:Arial,sans-serif">Ringing</th>
+        <th style="text-align:left;padding:9px 12px;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:Arial,sans-serif">Offline</th>
       </tr></thead>
       <tbody>{table_rows}</tbody>
     </table>
   </td></tr></table>
 
-  <div style="text-align:center;font-size:12px;color:#6b7280;padding:8px 0">
+  <p style="text-align:center;font-size:12px;color:#6b7280;font-family:Arial,sans-serif">
     {date_label} &nbsp;&middot;&nbsp; {company} (ID {company_id}) &nbsp;&middot;&nbsp; Source: Aloware agent_audits
-  </div>
+  </p>
 
 </td></tr></table>
 </body></html>
