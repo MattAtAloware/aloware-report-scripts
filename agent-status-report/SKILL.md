@@ -26,6 +26,21 @@ Metabase MCP → pass HTML to Gmail MCP.
 **Claude never writes SQL, never builds JSON contracts, never generates HTML.**
 The scripts are the single source of truth.
 
+### SQL source of truth — do not inline SQL into this file
+
+The canonical agent-status SQL (deduped+filtered LEAD() pipeline) lives in
+`run_report.py` — specifically `status_batch_sql()` and `agent_list_sql()`.
+**Do not paste the SQL here as a "reference."** Past drift between an inlined
+copy and `run_report.py` produced subtly different active%/utilization numbers
+vs. the canonical per-client scheduled reports (the inlined copy was missing
+the `SELECT DISTINCT` inside the `deduped` CTE, so duplicate audit rows
+distorted `LEAD()` durations on noisy days).
+
+If you need to inspect the SQL, read `run_report.py` directly. If you need to
+change the SQL, change it in `run_report.py` and nowhere else. Per-client
+SKILL.md files (e.g. `performance-golf-zone-daily-agent-status-report`) MUST
+also delegate to `run_report.py` rather than inlining SQL.
+
 **Scripts repo:** `MattAtAloware/aloware-report-scripts` → `agent-status-report/`
 
 | Script | Purpose |
@@ -217,6 +232,9 @@ old curl-based flow.)
 - **Never use curl to fetch scripts from GitHub.** Always use the GitHub MCP.
   raw.githubusercontent.com 403s in sandboxed shells.
 - **Never write SQL.** run_report.py generates all SQL. Execute it verbatim.
+  Do not inline SQL into this SKILL.md or any per-client SKILL.md — the
+  canonical SQL is `status_batch_sql()` / `agent_list_sql()` in
+  `run_report.py`, and any inline copy will eventually drift.
 - **Never build JSON contracts.** run_report.py builds the data contract internally.
 - **Never generate HTML.** build_email.py renders it. run_report.py calls it.
 - **Never use TodoWrite in automated/scheduled runs.** No user is watching.
